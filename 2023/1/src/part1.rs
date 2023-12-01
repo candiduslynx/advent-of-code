@@ -1,8 +1,8 @@
 use std::fs::read;
 use std::io::BufRead;
 
-pub(crate) fn solve1() ->u32{
-    return  read("./input/1.txt").unwrap().lines().
+pub(crate) fn solve() ->u32{
+    return  read("./input.txt").unwrap().lines().
         map(|s| extract_num(s.unwrap())).
         fold(0, |sum:u32, x| sum + (x as u32));
 }
