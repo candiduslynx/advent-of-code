@@ -7,7 +7,7 @@ struct Mov {
 
 impl Mov {
     fn possible(&self, max_r: u32, max_g: u32, max_b: u32) -> bool {
-        return self.r <= max_r && self.g <= max_g && self.b <= max_b;
+        self.r <= max_r && self.g <= max_g && self.b <= max_b
     }
 
     fn add_color(mut self, balls: &str) -> Self {
@@ -24,16 +24,16 @@ impl Mov {
             _ => panic!("{}", balls)
         }
 
-        return self;
+        self
     }
 
     fn power(self) -> u32 {
-        return self.r * self.g * self.b;
+        self.r * self.g * self.b
     }
 
     fn from_str(balls: &str) -> Self {
-        return balls.split(", ").
-            fold(Mov { r: 0, g: 0, b: 0 }, |sum, x| sum.add_color(x));
+        balls.split(", ").
+            fold(Mov { r: 0, g: 0, b: 0 }, |sum, x| sum.add_color(x))
     }
 }
 
@@ -45,7 +45,7 @@ pub(crate) struct Game {
 
 impl Game {
     pub(crate) fn possible(&self, max_r: u32, max_g: u32, max_b: u32) -> bool {
-        return self.moves.iter().all(|m| m.possible(max_r, max_g, max_b));
+        self.moves.iter().all(|m| m.possible(max_r, max_g, max_b))
     }
 
     fn minimal(&self) -> Mov {
@@ -54,12 +54,12 @@ impl Game {
                 if sum.r < x.r { sum.r = x.r }
                 if sum.g < x.g { sum.g = x.g }
                 if sum.b < x.b { sum.b = x.b }
-                return sum;
+                sum
             });
     }
 
     pub(crate) fn power(self) -> u32 {
-        return self.minimal().power();
+        self.minimal().power()
     }
 
 
@@ -71,9 +71,9 @@ impl Game {
         let parts: Vec<&str> = game.split(": ").collect();
         assert_eq!(parts.len(), 2);
 
-        return Game {
+        Game {
             moves: parts[1].split("; ").map(|m| Mov::from_str(m)).collect(),
             id: parts[0].strip_prefix("Game ").unwrap().parse().unwrap(),
-        };
+        }
     }
 }

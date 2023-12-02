@@ -1,18 +1,18 @@
 use std::fs::read;
 use std::io::BufRead;
 
-pub(crate) fn solve() ->u32{
-    return  read("./input.txt").unwrap().lines().
+pub(crate) fn solve() -> u32 {
+    read("./input.txt").unwrap().lines().
         map(|s| {
             let d = digits(s.unwrap());
             return d.first().unwrap() * 10 + d.last().unwrap();
         }).
-        fold(0, |sum:u32, x| sum + (x as u32) );
+        fold(0, |sum: u32, x| sum + (x as u32))
 }
 
 fn digits(src: String) -> Vec<u8> {
-    return src.char_indices().map( |(from, _)|src.split_at(from).1).filter_map(
-        |s|{
+    src.char_indices().map(|(from, _)| src.split_at(from).1).filter_map(
+        |s| {
             if s.starts_with("zero") || s.starts_with("0") {
                 return Some(0);
             }
@@ -45,5 +45,5 @@ fn digits(src: String) -> Vec<u8> {
             }
             return None;
         }
-    ).collect();
+    ).collect()
 }
