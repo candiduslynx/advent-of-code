@@ -27,6 +27,10 @@ impl Mov {
         return self;
     }
 
+    fn power(self) -> u32 {
+        return self.r * self.g * self.b;
+    }
+
     fn from_str(balls: &str) -> Self {
         return balls.split(", ").
             fold(Mov { r: 0, g: 0, b: 0 }, |sum, x| sum.add_color(x));
@@ -43,6 +47,21 @@ impl Game {
     pub(crate) fn possible(&self, max_r: u32, max_g: u32, max_b: u32) -> bool {
         return self.moves.iter().all(|m| m.possible(max_r, max_g, max_b));
     }
+
+    fn minimal(&self) -> Mov {
+        return self.moves.iter().
+            fold(Mov { r: 0, g: 0, b: 0 }, |mut sum, x| {
+                if sum.r < x.r { sum.r = x.r }
+                if sum.g < x.g { sum.g = x.g }
+                if sum.b < x.b { sum.b = x.b }
+                return sum;
+            });
+    }
+
+    pub(crate) fn power(self) -> u32 {
+        return self.minimal().power();
+    }
+
 
     pub(crate) fn from_str(game: String) -> Self {
         if game.is_empty() {
