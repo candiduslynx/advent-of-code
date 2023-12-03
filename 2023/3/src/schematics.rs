@@ -40,43 +40,50 @@ pub(crate) fn get_numbers(lines: Vec<String>) -> Vec<u64> {
 
 pub(crate) fn get_gear_ratios(lines: Vec<String>) -> Vec<u64> {
     let gears = get_gears(&lines);
-    let mut res: HashMap<Point, u64> = Default::default();
+    let mut res: HashMap<Point, (Option<u64>, Option<u64>)> = Default::default();
 
     for i in 0..lines.len() {
         let x = i as i32;
-        let mut num: (Option<u64>, Option<Point>) = (None, None); // 1 - val, 2 - gear coord
         let line = lines[i].as_bytes();
+
+        let mut num: Option<u64> = None;
+        let mut num_gears: HashSet<Point> = HashSet::new();
+
         for j in 0..line.len() {
             let c = line[j];
 
             if c.is_ascii_digit() {
-                num.0 = Some(num.0.unwrap_or_default() * 10 + ((c - b'0') as u64));
-                if num.1.is_none() {
-                    // calc once
-                    let nn = Point { x, y: j as i32 }.neighbors();
-                    let v = nn.iter().find(|&&p| gears.contains(&p));
-                    if v.is_some() {
-                        let q = *v.unwrap();
-                        num.1 = Some(q.clone());
-                    }
-                }
+                num = Some(num.unwrap_or_default() * 10 + ((c - b'0') as u64));
+                (&Point { x, y: j as i32 }).neighbors().iter().
+                    filter(|p| gears.contains(p)).
+                    for_each(|p| { num_gears.insert(*p); });
                 continue;
             }
-            if num.1.is_some() { // we set gear info only for numbers, so we're OK to check only this
-                let key = num.1.unwrap();
-                let val = res.get(&key).unwrap_or(&1u64);
-                res.insert(key, val * num.0.unwrap());
+            if num.is_some() {
+                num_gears.drain().for_each(|gear| add_gear_num(&mut res, num.unwrap(), &gear));
+                num = None;
             }
-            num = (None, None);
         }
         // num ends here
-        if num.1.is_some() {
-            let key = num.1.unwrap();
-            let val = res.get(&key).unwrap_or(&1u64);
-            res.insert(key, val * num.0.unwrap());
+        if num.is_some() {
+            num_gears.drain().for_each(|gear| add_gear_num(&mut res, num.unwrap(), &gear));
         }
     }
-    res.values().map(|s|*s).collect()
+
+    res.values().map(|val| val.0.unwrap() * val.1.unwrap()).collect()
+}
+
+fn add_gear_num(res: &mut HashMap<Point, (Option<u64>, Option<u64>)>, num: u64, p: &Point) {
+    res.entry(*p).and_modify(
+        |vals|
+            {
+                if vals.1.is_some() {
+                    // we're adding 3rd num to a gear
+                    panic!("{:?}, adding {}", vals, num)
+                }
+                vals.1 = Some(num);
+            }
+    ).or_insert((Some(num), None));
 }
 
 fn get_symbols(lines: &Vec<String>) -> HashSet<Point> {
