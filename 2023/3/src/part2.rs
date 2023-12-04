@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs::read;
 use std::io::BufRead;
+
 use lib::point::Point;
 
 pub(crate) fn solve(path: &str) -> u64 {

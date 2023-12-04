@@ -14,8 +14,8 @@ pub(crate) fn solve(path: &str) -> u32 {
         map(|s| s.replace("seven", "7n")). // _n_ine
         map(|s| s.replace("eight", "e8t")). // on_e_, _t_wo, _t_hre_e_, fiv_e_
         map(|s| s.replace("nine", "n9e")). // seve_n_, _e_ight
-        map(|s| s.chars().filter_map(|c|c.to_digit(10)).collect::<Vec<u32>>()). // digits from the line
+        map(|s| s.chars().filter_map(|c| c.to_digit(10)).collect::<Vec<u32>>()). // digits from the line
         filter(|digits| !digits.is_empty()).
-        map(|digits|digits.first().unwrap() * 10 + digits.last().unwrap()). // take first & last
+        map(|digits| digits.first().unwrap() * 10 + digits.last().unwrap()). // take first & last
         sum()
 }

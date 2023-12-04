@@ -1,12 +1,12 @@
-use lib::point::Point;
 use std::collections::HashSet;
 use std::fs::read;
 use std::io::BufRead;
 
+use lib::point::Point;
 
 pub(crate) fn solve(path: &str) -> u64 {
     get_numbers(
-        read(path).unwrap().lines().map(|s|s.unwrap()).collect()
+        read(path).unwrap().lines().map(|s| s.unwrap()).collect()
     ).iter().sum()
 }
 
@@ -16,7 +16,7 @@ fn get_numbers(lines: Vec<String>) -> Vec<u64> {
 
     for i in 0..lines.len() {
         let x = i as i32;
-        let mut num: Option<u64> = None; 
+        let mut num: Option<u64> = None;
         let mut valid = false;
         let line = lines[i].as_bytes();
         for j in 0..line.len() {

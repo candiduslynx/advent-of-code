@@ -48,13 +48,13 @@ impl Game {
 
     fn minimal(&self) -> Mov {
         self.moves.iter().
-            fold(Mov { r: 0, g: 0, b: 0 }, 
-                |mut sum, x| {
-                if sum.r < x.r { sum.r = x.r }
-                if sum.g < x.g { sum.g = x.g }
-                if sum.b < x.b { sum.b = x.b }
-                sum
-            })
+            fold(Mov { r: 0, g: 0, b: 0 },
+                 |mut sum, x| {
+                     if sum.r < x.r { sum.r = x.r }
+                     if sum.g < x.g { sum.g = x.g }
+                     if sum.b < x.b { sum.b = x.b }
+                     sum
+                 })
     }
 
     pub(crate) fn power(self) -> u32 {
