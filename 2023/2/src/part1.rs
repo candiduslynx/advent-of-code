@@ -11,5 +11,6 @@ pub(crate) fn solve(path: &str) -> u32 {
     read(path).unwrap().lines().
         map(|s| game::Game::from_str(s.unwrap())).
         filter(|g| g.possible(MAX_RED, MAX_GREEN, MAX_BLUE)).
-        map(|g| g.id).sum()
+        map(|g| g.id).
+        sum()
 }

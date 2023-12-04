@@ -11,7 +11,7 @@ impl Mov {
     }
 
     fn add_color(mut self, balls: &str) -> Self {
-        let parts: Vec<&str> = balls.split(" ").collect();
+        let parts: Vec<&str> = balls.split_whitespace().collect();
         assert_eq!(parts.len(), 2);
 
         let amount: u32 = parts[0].parse().unwrap();
