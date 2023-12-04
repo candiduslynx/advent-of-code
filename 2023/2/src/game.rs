@@ -12,9 +12,7 @@ impl Mov {
 
     fn add_color(mut self, balls: &str) -> Self {
         let parts: Vec<&str> = balls.split(" ").collect();
-        if parts.len() != 2 {
-            panic!("{}", balls)
-        }
+        assert_eq!(parts.len(), 2);
 
         let amount: u32 = parts[0].parse().unwrap();
         match parts[1] {
@@ -49,13 +47,14 @@ impl Game {
     }
 
     fn minimal(&self) -> Mov {
-        return self.moves.iter().
-            fold(Mov { r: 0, g: 0, b: 0 }, |mut sum, x| {
+        self.moves.iter().
+            fold(Mov { r: 0, g: 0, b: 0 }, 
+                |mut sum, x| {
                 if sum.r < x.r { sum.r = x.r }
                 if sum.g < x.g { sum.g = x.g }
                 if sum.b < x.b { sum.b = x.b }
                 sum
-            });
+            })
     }
 
     pub(crate) fn power(self) -> u32 {
