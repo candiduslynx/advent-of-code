@@ -3,6 +3,8 @@ mod part2;
 mod card;
 
 fn main() {
-    println!("The result for part 1 is {}", part1::solve());
-    println!("The result for part 2 is {}", part2::solve());
+    println!("part 1 test result: {}", part1::solve("./test.txt"));
+    println!("part 1 result: {}", part1::solve("./input.txt"));
+    println!("part 2 test result: {}", part2::solve("./test.txt"));
+    println!("part 2 result: {}", part2::solve("./input.txt"));
 }
