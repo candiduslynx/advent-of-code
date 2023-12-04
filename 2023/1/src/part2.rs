@@ -1,49 +1,21 @@
 use std::fs::read;
 use std::io::BufRead;
 
-pub(crate) fn solve() -> u32 {
-    read("./input.txt").unwrap().lines().
-        map(|s| {
-            let d = digits(s.unwrap());
-            return d.first().unwrap() * 10 + d.last().unwrap();
-        }).
-        fold(0, |sum: u32, x| sum + (x as u32))
-}
-
-fn digits(src: String) -> Vec<u8> {
-    src.char_indices().map(|(from, _)| src.split_at(from).1).filter_map(
-        |s| {
-            if s.starts_with("zero") || s.starts_with("0") {
-                return Some(0);
-            }
-            if s.starts_with("one") || s.starts_with("1") {
-                return Some(1);
-            }
-            if s.starts_with("two") || s.starts_with("2") {
-                return Some(2);
-            }
-            if s.starts_with("three") || s.starts_with("3") {
-                return Some(3);
-            }
-            if s.starts_with("four") || s.starts_with("4") {
-                return Some(4);
-            }
-            if s.starts_with("five") || s.starts_with("5") {
-                return Some(5);
-            }
-            if s.starts_with("six") || s.starts_with("6") {
-                return Some(6);
-            }
-            if s.starts_with("seven") || s.starts_with("7") {
-                return Some(7);
-            }
-            if s.starts_with("eight") || s.starts_with("8") {
-                return Some(8);
-            }
-            if s.starts_with("nine") || s.starts_with("9") {
-                return Some(9);
-            }
-            return None;
-        }
-    ).collect()
+pub(crate) fn solve(path: &str) -> u32 {
+    read(path).unwrap().lines().
+        map(|s| s.unwrap()).
+        map(|s| s.replace("zero", "0o")). // _o_ne
+        map(|s| s.replace("one", "o1e")). // zer_o_, tw_o_, _e_ight
+        map(|s| s.replace("two", "t2o")). // _o_ne, eigh_t_
+        map(|s| s.replace("three", "t3e")). // _e_igh_t_
+        map(|s| s.replace("four", "4")).
+        map(|s| s.replace("five", "5e")). // _e_ight
+        map(|s| s.replace("six", "6")).
+        map(|s| s.replace("seven", "7n")). // _n_ine
+        map(|s| s.replace("eight", "e8t")). // on_e_, _t_wo, _t_hre_e_, fiv_e_
+        map(|s| s.replace("nine", "n9e")). // seve_n_, _e_ight
+        map(|s| s.chars().filter_map(|c| c.to_digit(10)).collect::<Vec<u32>>()). // digits from the line
+        filter(|digits| !digits.is_empty()).
+        map(|digits| digits.first().unwrap() * 10 + digits.last().unwrap()). // take first & last
+        sum()
 }
