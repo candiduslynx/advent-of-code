@@ -13,12 +13,12 @@ impl Range {
     }
 
     pub(crate) fn reduce(ranges: Vec<Range>) -> Vec<Range> {
+        if ranges.len() < 2 {
+            return ranges;
+        }
+
         let mut m: Vec<Range> = ranges.iter().cloned().collect();
         m.sort_by(|a, b| u64::cmp(&a.start, &b.start));
-
-        if m.len() < 2 {
-            return m;
-        }
 
         let mut result: Vec<Range> = Vec::new();
         let mut curr: Range = m[0];
