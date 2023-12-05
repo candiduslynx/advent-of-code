@@ -13,14 +13,14 @@ pub(crate) fn solve(path: &str) -> u64 {
 
 fn get_gear_ratios(lines: Vec<String>) -> Vec<u64> {
     let gears = get_gears(&lines);
-    let mut res: HashMap<Point, (u64, u64)> = HashMap::new();
+    let mut res: HashMap<Point::<i32>, (u64, u64)> = HashMap::new();
 
     for i in 0..lines.len() {
         let x = i as i32;
         let line = lines[i].as_bytes();
 
         let mut num: Option<u64> = None;
-        let mut num_gears: HashSet<Point> = HashSet::new();
+        let mut num_gears: HashSet<Point::<i32>> = HashSet::new();
 
         for j in 0..line.len() {
             let c = line[j];
@@ -48,12 +48,12 @@ fn get_gear_ratios(lines: Vec<String>) -> Vec<u64> {
     res.values().map(|val| val.0 * val.1).collect()
 }
 
-fn add_gear_num(res: &mut HashMap<Point, (u64, u64)>, num: u64, p: &Point) {
+fn add_gear_num(res: &mut HashMap<Point::<i32>, (u64, u64)>, num: u64, p: &Point::<i32>) {
     res.entry(*p).and_modify(|v| v.1 = num).or_insert((num, 0));
 }
 
-fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
-    let mut res: HashSet<Point> = HashSet::new();
+fn get_gears(lines: &Vec<String>) -> HashSet<Point::<i32>> {
+    let mut res: HashSet<Point::<i32>> = HashSet::new();
 
     for i in 0..lines.len() {
         let x = i as i32;
@@ -111,7 +111,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
     res
 }
 
-fn is_digit_pos(p: Point, lines: &Vec<String>) -> bool {
+fn is_digit_pos(p: Point::<i32>, lines: &Vec<String>) -> bool {
     if !p.is_valid(lines.len() as i32, lines[0].as_bytes().len() as i32) {
         return false;
     }

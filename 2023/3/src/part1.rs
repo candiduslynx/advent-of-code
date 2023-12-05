@@ -49,8 +49,8 @@ fn get_numbers(lines: Vec<String>) -> Vec<u64> {
     res
 }
 
-fn get_symbols(lines: &Vec<String>) -> HashSet<Point> {
-    let mut res: HashSet<Point> = HashSet::new();
+fn get_symbols(lines: &Vec<String>) -> HashSet<Point::<i32>> {
+    let mut res: HashSet<Point::<i32>> = HashSet::new();
 
     for i in 0..lines.len() {
         let x = i as i32;

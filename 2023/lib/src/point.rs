@@ -1,10 +1,10 @@
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct Point {
-    pub x: i32,
-    pub y: i32,
+pub struct Point<T> {
+    pub x: T,
+    pub y: T,
 }
 
-impl Point {
+impl<T: Eq + Ord> Point<T> {
     pub fn neighbors(&self) -> [Point; 8] {
         [
             Point { x: self.x - 1, y: self.y - 1 },
@@ -54,7 +54,7 @@ impl Point {
         ]
     }
 
-    pub fn is_valid(&self, exclusive_max_x: i32, exclusive_max_y: i32) -> bool {
+    pub fn is_valid(&self, exclusive_max_x: T, exclusive_max_y: T) -> bool {
         self.x >= 0 && self.x < exclusive_max_x && self.y >= 0 && self.y < exclusive_max_y
     }
 }
