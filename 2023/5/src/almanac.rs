@@ -1,97 +1,56 @@
 use std::io::Lines;
 
-use crate::interval;
 use crate::interval::{Interval, Mapping};
 use crate::range::Range;
 
 pub(crate) struct Almanac {
     pub seeds: Vec<u64>,
-    pub seed_to_soil: Mapping,
-    pub soil_to_fertilizer: Mapping,
-    pub fertilizer_to_water: Mapping,
-    pub water_to_light: Mapping,
-    pub light_to_temperature: Mapping,
-    pub temperature_to_humidity: Mapping,
-    pub humidity_to_location: Mapping,
+    mappings: Vec<Mapping>,
 }
 
 impl Almanac {
-    pub fn location_for_seed(&self, seed: &u64) -> u64 {
-        let soil = interval::value_for(&self.seed_to_soil, seed);
-        let fertilizer = interval::value_for(&self.soil_to_fertilizer, &soil);
-        let water = interval::value_for(&self.fertilizer_to_water, &fertilizer);
-        let light = interval::value_for(&self.water_to_light, &water);
-        let temperature = interval::value_for(&self.light_to_temperature, &light);
-        let humidity = interval::value_for(&self.temperature_to_humidity, &temperature);
-        interval::value_for(&self.humidity_to_location, &humidity)
+    pub fn locations(&self, ranges: Vec<Range>) -> Vec<Range> {
+        self.mappings.iter().fold(ranges, |val, next| Almanac::apply_mapping(next, val))
     }
 
-    pub fn locations_for_ranges(&self, ranges: Vec<Range>) -> Vec<Range> {
-        let soil = Almanac::apply_mapping(&self.seed_to_soil, ranges);
-        let fertilizer = Almanac::apply_mapping(&self.soil_to_fertilizer, soil);
-        let water = Almanac::apply_mapping(&self.fertilizer_to_water, fertilizer);
-        let light = Almanac::apply_mapping(&self.water_to_light, water);
-        let temperature = Almanac::apply_mapping(&self.light_to_temperature, light);
-        let humidity = Almanac::apply_mapping(&self.temperature_to_humidity, temperature);
-        Almanac::apply_mapping(&self.humidity_to_location, humidity)
+    pub(crate) fn from_lines(mut lines: Lines<&[u8]>) -> Self {
+        let seeds: Vec<u64> = lines.next().unwrap().unwrap().
+            split_whitespace().filter_map(|s| s.trim().parse().ok()).
+            collect();
+
+        Almanac { seeds, mappings: Almanac::mapping(lines) }
     }
 
-    pub(crate) fn from_lines(lines: Lines<&[u8]>) -> Self {
-        let rows: Vec<String> = lines.map(|l| l.unwrap().trim().to_owned()).collect();
+    fn mapping(lines: Lines<&[u8]>) -> Vec<Mapping> {
+        let mut curr: Mapping = Mapping::new();
+        let mut mappings: Vec<Mapping> = Vec::new();
+        lines.for_each(|val| {
+            let s = val.unwrap().trim().to_owned();
+            if s.is_empty() {
+                if curr.len() > 0 {
+                    mappings.push(curr.iter().copied().collect());
+                    curr = Mapping::new();
+                }
+                return;
+            }
 
-        let seeds: Vec<u64> = rows[0].split_whitespace().filter_map(|s| s.trim().parse().ok()).collect();
+            if s.ends_with(" map:") {
+                // mapping is done
+                curr = Mapping::new();
+                return;
+            }
 
-        let mut idx = 2;
-        assert!(idx < rows.len());
-        assert_eq!(rows[idx], "seed-to-soil map:");
-        let seed_to_soil: Mapping = Almanac::mapping(&rows, idx + 1);
+            curr.push(Interval::from_str(s.as_str()));
+        });
 
-        idx += seed_to_soil.len() + 2;
-        assert!(idx < rows.len());
-        assert_eq!(rows[idx], "soil-to-fertilizer map:");
-        let soil_to_fertilizer: Mapping = Almanac::mapping(&rows, idx + 1);
-
-        idx += soil_to_fertilizer.len() + 2;
-        assert!(idx < rows.len());
-        assert_eq!(rows[idx], "fertilizer-to-water map:");
-        let fertilizer_to_water: Mapping = Almanac::mapping(&rows, idx + 1);
-
-        idx += fertilizer_to_water.len() + 2;
-        assert!(idx < rows.len());
-        assert_eq!(rows[idx], "water-to-light map:");
-        let water_to_light: Mapping = Almanac::mapping(&rows, idx + 1);
-
-        idx += water_to_light.len() + 2;
-        assert!(idx < rows.len());
-        assert_eq!(rows[idx], "light-to-temperature map:");
-        let light_to_temperature: Mapping = Almanac::mapping(&rows, idx + 1);
-
-        idx += light_to_temperature.len() + 2;
-        assert!(idx < rows.len());
-        assert_eq!(rows[idx], "temperature-to-humidity map:");
-        let temperature_to_humidity: Mapping = Almanac::mapping(&rows, idx + 1);
-
-        idx += temperature_to_humidity.len() + 2;
-        assert!(idx < rows.len());
-        assert_eq!(rows[idx], "humidity-to-location map:");
-        let humidity_to_location: Mapping = Almanac::mapping(&rows, idx + 1);
-
-        Almanac {
-            seeds,
-            seed_to_soil,
-            soil_to_fertilizer,
-            fertilizer_to_water,
-            water_to_light,
-            light_to_temperature,
-            temperature_to_humidity,
-            humidity_to_location,
+        // if no newline at the end
+        if curr.len() > 0 {
+            mappings.push(curr.iter().copied().collect());
         }
-    }
 
-    fn mapping(rows: &Vec<String>, start: usize) -> Mapping {
-        let mut m: Mapping = rows.iter().skip(start).map_while(|s| Interval::from_str(s)).collect();
-        m.sort_by(|a, b| u64::cmp(&a.start, &b.start));
-        m
+        mappings.iter_mut().
+            for_each(|m| m.sort_by(|a, b| u64::cmp(&a.start, &b.start)));
+        mappings
     }
 
     fn apply_mapping(m: &Mapping, ranges: Vec<Range>) -> Vec<Range> {
@@ -102,47 +61,35 @@ impl Almanac {
     fn apply_mapping_to_range(m: &Mapping, range: &Range) -> Vec<Range> {
         assert!(range.start <= range.end);
         let mut start = range.start;
-        let end = range.end;
-        let mut res: Vec<Range> = Vec::new();
 
-        m.iter().for_each(|m| {
-            if start > end {
-                // we're done, just iterate through
-                return;
-            }
-            if m.end < start || end < m.start {
-                // don't have intersection, leave
-                return;
-            }
+        let mut res: Vec<Range> = m.iter().
+            skip_while(|m| m.start > range.end).
+            flat_map(|m| {
+                let mut i: Vec<Range> = Vec::new();
+                if start > range.end || m.end < start || range.end < m.start {
+                    // we're done, just iterate through
+                    return i;
+                }
 
-            if start < m.start {
-                // have an idempotent part
-                res.push(Range { start, end: m.start - 1 });
-                start = m.start;
-            }
+                if start < m.start {
+                    // have an idempotent part
+                    i.push(Range { start, end: m.start - 1 });
+                    start = m.start;
+                }
 
-            if m.end >= end {
-                // our last bit
-                res.push(Range {
-                    start: m.value_for(&start).unwrap(),
-                    end: m.value_for(&end).unwrap(),
+                let end = if range.end > m.end { m.end } else { range.end };
+                i.push(Range {
+                    start: m.value_for(start),
+                    end: m.value_for(end),
                 });
                 start = end + 1;
-                return;
-            }
 
-            // push range for current bit
-            res.push(Range {
-                start: m.value_for(&start).unwrap(),
-                end: m.value_for(&m.end).unwrap(),
-            });
+                i
+            }).collect();
 
-            start = m.end + 1;
-        });
-
-        if start <= end {
+        if start <= range.end {
             // have an idempotent tail
-            res.push(Range { start, end });
+            res.push(Range { start, end: range.end });
         }
         return Range::reduce(res);
     }
