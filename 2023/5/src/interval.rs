@@ -5,6 +5,8 @@ pub(crate) struct Interval {
     pub value: u64,
 }
 
+pub(crate) type Mapping = Vec<Interval>;
+
 impl Interval {
     fn contains(&self, elem: &u64) -> bool {
         self.start <= *elem && *elem <= self.end
@@ -30,12 +32,4 @@ impl Interval {
             })
         }
     }
-}
-
-pub(crate) type Mapping = Vec<Interval>;
-
-pub(crate) fn value_for(intervals: &Mapping, elem: &u64) -> u64 {
-    intervals.iter().
-        find(|i| i.contains(elem)).
-        map_or(*elem, |i| i.value_for(elem).unwrap())
 }

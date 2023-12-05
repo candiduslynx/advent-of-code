@@ -1,6 +1,5 @@
 use std::io::Lines;
 
-use crate::interval;
 use crate::interval::{Interval, Mapping};
 use crate::range::Range;
 
@@ -10,11 +9,7 @@ pub(crate) struct Almanac {
 }
 
 impl Almanac {
-    pub fn location_for_seed(&self, seed: &u64) -> u64 {
-        self.mappings.iter().fold(*seed, |val, next| interval::value_for(next, &val))
-    }
-
-    pub fn locations_for_ranges(&self, ranges: Vec<Range>) -> Vec<Range> {
+    pub fn locations(&self, ranges: Vec<Range>) -> Vec<Range> {
         self.mappings.iter().fold(ranges, |val, next| Almanac::apply_mapping(next, val))
     }
 
@@ -94,7 +89,7 @@ impl Almanac {
 
         if start <= range.end {
             // have an idempotent tail
-            res.push(Range { start, end });
+            res.push(Range { start, end:range.end });
         }
         return Range::reduce(res);
     }
