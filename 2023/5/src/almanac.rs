@@ -140,9 +140,9 @@ impl Almanac {
             start = m.end + 1;
         });
 
-        if start<= end {
+        if start <= end {
             // have an idempotent tail
-            res.push(Range { start, end: end });
+            res.push(Range { start, end });
         }
         return Range::reduce(res);
     }
