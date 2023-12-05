@@ -1,35 +1,29 @@
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct Interval {
+    pub value: u64,
     pub start: u64,
     pub end: u64,
-    pub value: u64,
 }
 
 pub(crate) type Mapping = Vec<Interval>;
 
 impl Interval {
-    fn contains(&self, elem: &u64) -> bool {
-        self.start <= *elem && *elem <= self.end
-    }
-
-    pub(crate) fn value_for(&self, elem: &u64) -> Option<u64> {
-        if self.contains(elem) {
-            Some(self.value + (*elem - self.start))
+    pub(crate) fn value_for(&self, elem: u64) -> u64 {
+        if self.start <= elem && elem <= self.end {
+            self.value + (elem - self.start)
         } else {
-            None
+            elem
         }
     }
-    pub(crate) fn from_str(s: &str) -> Option<Self> {
+
+    pub(crate) fn from_str(s: &str) -> Self {
         let values: Vec<u64> = s.split_whitespace().
             filter_map(|s| s.trim().parse().ok()).collect();
-        if values.len() < 3 {
-            None
-        } else {
-            Some(Interval {
-                start: values[1],
-                end: values[1] + values[2] - 1,
-                value: values[0],
-            })
+        assert_eq!(values.len(), 3);
+        Interval {
+            value: values[0],
+            start: values[1],
+            end: values[1] + values[2] - 1,
         }
     }
 }

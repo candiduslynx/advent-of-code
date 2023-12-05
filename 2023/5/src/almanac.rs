@@ -40,7 +40,7 @@ impl Almanac {
                 return;
             }
 
-            curr.push(Interval::from_str(s.as_str()).unwrap());
+            curr.push(Interval::from_str(s.as_str()));
         });
 
         // if no newline at the end
@@ -79,8 +79,8 @@ impl Almanac {
 
                 let end = if range.end > m.end { m.end } else { range.end };
                 i.push(Range {
-                    start: m.value_for(&start).unwrap(),
-                    end: m.value_for(&end).unwrap(),
+                    start: m.value_for(start),
+                    end: m.value_for(end),
                 });
                 start = end + 1;
 
@@ -89,7 +89,7 @@ impl Almanac {
 
         if start <= range.end {
             // have an idempotent tail
-            res.push(Range { start, end:range.end });
+            res.push(Range { start, end: range.end });
         }
         return Range::reduce(res);
     }
