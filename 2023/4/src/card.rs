@@ -8,8 +8,7 @@ pub fn winning_numbers(string: String) -> usize {
 }
 
 fn u32_set(string: &str) -> HashSet<u32> {
-    string.split_whitespace().
+    HashSet::from_iter(string.split_whitespace().
         map(|s| s.trim()).
-        filter_map(|s| s.parse().ok()).
-        collect::<HashSet<u32>>()
+        filter_map(|s| s.parse().ok()))
 }
