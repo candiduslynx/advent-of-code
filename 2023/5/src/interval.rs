@@ -1,3 +1,4 @@
+#[derive(Debug, Copy, Clone)]
 pub(crate) struct Interval {
     pub start: u64,
     pub end: u64,
