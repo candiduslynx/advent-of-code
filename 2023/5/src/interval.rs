@@ -16,7 +16,6 @@ impl Interval {
             None
         }
     }
-
     pub(crate) fn from_str(s: &str) -> Option<Self> {
         let values: Vec<u64> = s.split_whitespace().
             filter_map(|s| s.trim().parse().ok()).collect();
