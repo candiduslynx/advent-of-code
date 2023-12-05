@@ -1,6 +1,7 @@
 mod part1;
 mod part2;
-mod card;
+mod interval;
+mod almanac;
 
 fn main() {
     println!("part 1 test result: {}", part1::solve("./test.txt"));

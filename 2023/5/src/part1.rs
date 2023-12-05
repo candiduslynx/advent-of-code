@@ -1,10 +1,8 @@
 use std::fs::read;
 use std::io::BufRead;
-
-use crate::card;
+use crate::almanac::Almanac;
 
 pub(crate) fn solve(path: &str) -> u64 {
-    read(path).unwrap().lines().
-        map(|s| card::winning_numbers(s.unwrap())).
-        filter(|&p| p > 0).map(|p| 2u64.pow(p as u32 - 1)).sum()
+    let almanac = Almanac::from_lines(read(path).unwrap().lines());
+    almanac.seeds.iter().map(|s|almanac.location_for_seed(s)).min().unwrap()
 }
