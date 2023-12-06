@@ -1,5 +1,6 @@
 mod part1;
 mod part2;
+mod equation;
 
 fn main() {
     println!("part 1 test result: {}", part1::solve("./test.txt"));
