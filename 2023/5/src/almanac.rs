@@ -1,7 +1,7 @@
 use std::io::Lines;
 
 use crate::interval::{Interval, Mapping};
-use crate::range::Range;
+use crate::interval::Range;
 
 pub(crate) struct Almanac {
     pub seeds: Vec<u64>,
@@ -49,7 +49,7 @@ impl Almanac {
         }
 
         mappings.iter_mut().
-            for_each(|m| m.sort_by(|a, b| u64::cmp(&a.start, &b.start)));
+            for_each(|m| m.sort_by(|a, b| u64::cmp(&a.range.start, &b.range.start)));
         mappings
     }
 
@@ -63,21 +63,22 @@ impl Almanac {
         let mut start = range.start;
 
         let mut res: Vec<Range> = m.iter().
-            skip_while(|m| m.start > range.end).
+            skip_while(|m| m.range.start > range.end).
             flat_map(|m| {
+                let curr = m.range;
                 let mut i: Vec<Range> = Vec::new();
-                if start > range.end || m.end < start || range.end < m.start {
+                if start > range.end || curr.end < start || range.end < curr.start {
                     // we're done, just iterate through
                     return i;
                 }
 
-                if start < m.start {
+                if start < curr.start {
                     // have an idempotent part
-                    i.push(Range { start, end: m.start - 1 });
-                    start = m.start;
+                    i.push(Range { start, end: curr.start - 1 });
+                    start = curr.start;
                 }
 
-                let end = if range.end > m.end { m.end } else { range.end };
+                let end = if range.end > curr.end { curr.end } else { range.end };
                 i.push(Range {
                     start: m.value_for(start),
                     end: m.value_for(end),
