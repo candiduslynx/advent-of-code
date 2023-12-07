@@ -4,9 +4,5 @@ pub fn winning_numbers(string: String) -> usize {
     assert_eq!(nums.len(), 2);
 
     // using HashSet isn't justified by the len of the numbers, so use vectors instead
-    intersection(&nums[0], &nums[1]).len()
-}
-
-fn intersection(a: &Vec<u32>, b: &Vec<u32>) -> Vec<u32> {
-    a.into_iter().filter(|v|b.contains(v)).map(|v|*v).collect::<Vec<u32>>()
+    nums[0].iter().filter(|v|nums[1].contains(v)).count()
 }
