@@ -1,14 +1,12 @@
-use std::collections::HashSet;
-
 pub fn winning_numbers(string: String) -> usize {
-    let nums: Vec<&str> = string.split(": ").last().unwrap().split(" | ").collect();
+    let nums: Vec<Vec<u32>> = string.split(": ").last().unwrap().split(" | ").
+        map(|s| s.split_whitespace().filter_map(|s| s.parse().ok()).collect()).collect();
     assert_eq!(nums.len(), 2);
 
-    u32_set(nums[0]).intersection(&u32_set(nums[1])).count()
+    // using HashSet isn't justified by the len of the numbers, so use vectors instead
+    intersection(&nums[0], &nums[1]).len()
 }
 
-fn u32_set(string: &str) -> HashSet<u32> {
-    HashSet::from_iter(string.split_whitespace().
-        map(|s| s.trim()).
-        filter_map(|s| s.parse().ok()))
+fn intersection(a: &Vec<u32>, b: &Vec<u32>) -> Vec<u32> {
+    a.into_iter().filter(|v|b.contains(v)).map(|v|*v).collect::<Vec<u32>>()
 }
