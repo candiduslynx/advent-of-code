@@ -1,5 +1,6 @@
 use lib::time_solution::*;
 
+mod node;
 mod part1;
 mod part2;
 
