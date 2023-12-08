@@ -16,18 +16,13 @@ pub(crate) fn solve(path: &str) -> u64 {
     let lr = lines[0].trim().to_owned();
     lines.swap_remove(0);
 
-    let nodes = node::to_nodes(lines);
-    let mut pos: &str = START;
+    let nodes = &node::to_nodes(lines);
+    let mut pos: &String = &START.to_string();
     lr.chars()
         .cycle()
         .enumerate()
         .find(|(_, next)| {
-            let (l,r) = nodes.get(pos).unwrap();
-            match next {
-                'L' => pos = l,
-                'R' => pos = r,
-                _ => panic!("unsupported dst {next}"),
-            }
+            pos = node::next(nodes, pos, next);
 
             pos == FINISH
         })
