@@ -2,6 +2,7 @@ use std::fs::read;
 use std::io::BufRead;
 
 use crate::node;
+use crate::node::Dir;
 
 pub(crate) fn solve(path: &str) -> u64 {
     let mut lines: Vec<String> = read(path)
@@ -11,19 +12,24 @@ pub(crate) fn solve(path: &str) -> u64 {
         .filter(|s| !s.is_empty())
         .collect();
 
-    let lr = lines[0].trim().to_owned();
+    let dirs = lines[0].trim().chars().map(|c| Dir::from_char(c).unwrap()).collect();
     lines.swap_remove(0);
+    let nodes = node::to_nodes(lines);
 
-    let nodes = &node::to_nodes(lines);
+    nodes.keys().filter(|s| s.ends_with("A")).map(|s| {
+        node::path(&nodes, &dirs, s, |pos| pos.ends_with("Z"))
+    }).fold(1u64, |s, c| lcm(s, c))
+}
 
-    let mut pos: Vec<&String> = nodes.keys().filter(|s| s.ends_with("A")).collect();
-    lr.chars()
-        .cycle()
-        .enumerate()
-        .find(|(_, next)| {
-            node::vec_next(nodes, &mut pos, next);
-            pos.iter().filter(|&&s| !s.ends_with("Z")).count() == 0
-        })
-        .unwrap()
-        .0 as u64 + 1
+fn gcd(a: u64, b: u64) -> u64 {
+    let (mut a, mut b) = (a, b);
+    while b > 0 {
+        (a, b) = (b, a % b);
+    }
+
+    a
+}
+
+fn lcm(a: u64, b: u64) -> u64 {
+    a * b / gcd(a, b)
 }

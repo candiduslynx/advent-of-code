@@ -20,15 +20,35 @@ pub(crate) fn to_nodes(lines: Vec<String>) -> HashMap<String, (String, String)> 
         })
 }
 
-pub(crate) fn next<'a>(nodes: &'a HashMap<String, (String, String)>, pos: &String, dir: &char) -> &'a String {
-    let (l, r) = nodes.get(pos).unwrap();
-    match dir {
-        'L' => l,
-        'R' => r,
-        _ => panic!("unsupported dir {dir}"),
+pub(crate) enum Dir { L, R }
+
+impl Dir {
+    pub(crate) fn from_char(c: char) -> Option<Dir> {
+        match c {
+            'L' => Some(Dir::L),
+            'R' => Some(Dir::R),
+            _ => None
+        }
     }
 }
 
-pub(crate) fn vec_next<'a>(nodes: &'a HashMap<String, (String, String)>, pos: &mut Vec<&'a String>, dir: &char) {
-    pos.iter_mut().for_each(|pos| *pos = next(nodes, pos, dir));
+pub(crate) fn path<C>(nodes: &HashMap<String, (String, String)>,
+                      dirs: &Vec<Dir>,
+                      start: &String,
+                      done: C,
+) -> u64
+    where C: Fn(&String) -> bool
+{
+    let mut pos = start;
+    dirs.iter().cycle()
+        .enumerate()
+        .find(|(_, next)| {
+            match next {
+                Dir::L => pos = &nodes.get(pos).unwrap().0,
+                Dir::R => pos = &nodes.get(pos).unwrap().1,
+            }
+            done(pos)
+        })
+        .unwrap()
+        .0 as u64 + 1
 }

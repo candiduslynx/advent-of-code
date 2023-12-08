@@ -1,6 +1,7 @@
 use std::fs::read;
 use std::io::BufRead;
 use crate::node;
+use crate::node::Dir;
 
 pub(crate) fn solve(path: &str) -> u64 {
     const START: &str = "AAA";
@@ -13,19 +14,8 @@ pub(crate) fn solve(path: &str) -> u64 {
         .filter(|s| !s.is_empty())
         .collect();
 
-    let lr = lines[0].trim().to_owned();
+    let dirs = lines[0].trim().chars().map(|c| Dir::from_char(c).unwrap()).collect();
     lines.swap_remove(0);
-
-    let nodes = &node::to_nodes(lines);
-    let mut pos: &String = &START.to_string();
-    lr.chars()
-        .cycle()
-        .enumerate()
-        .find(|(_, next)| {
-            pos = node::next(nodes, pos, next);
-
-            pos == FINISH
-        })
-        .unwrap()
-        .0 as u64 + 1
+    let nodes = node::to_nodes(lines);
+    node::path(&nodes, &dirs, &START.to_string(), |pos|pos.eq(FINISH))
 }
