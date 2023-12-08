@@ -1,12 +1,9 @@
 use std::fs::read;
 use std::io::BufRead;
-use crate::node;
-use crate::node::Dir;
+
+use crate::node::{Dir, Node};
 
 pub(crate) fn solve(path: &str) -> u64 {
-    const START: &str = "AAA";
-    const FINISH: &str = "ZZZ";
-
     let mut lines: Vec<String> = read(path)
         .unwrap()
         .lines()
@@ -16,6 +13,9 @@ pub(crate) fn solve(path: &str) -> u64 {
 
     let dirs = lines[0].trim().chars().map(|c| Dir::from_char(c).unwrap()).collect();
     lines.swap_remove(0);
-    let nodes = node::to_nodes(lines);
-    node::path(&nodes, &dirs, &START.to_string(), |pos|pos.eq(FINISH))
+
+    let nodes = Node::from_lines(&lines);
+    let start = nodes.iter().find(|n| n.label == "AAA").unwrap();
+
+    Node::path_len(start, &dirs, &nodes, |n| n.label.eq("ZZZ"))
 }
