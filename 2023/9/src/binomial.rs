@@ -5,7 +5,11 @@ pub(crate) fn cnk(max: usize) -> Vec<Vec<i64>> {
     res.push(last.clone());
 
     for _n in 1..=max {
-        last = last.iter().skip(1).zip(last.iter()).map(|(x, y)| x + y)
+        last = last
+            .iter()
+            .skip(1)
+            .zip(last.iter())
+            .map(|(x, y)| x + y)
             .fold(vec![1], |mut c, x| {
                 c.push(x);
                 c
