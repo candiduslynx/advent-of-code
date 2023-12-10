@@ -1,7 +1,7 @@
 use std::io::Lines;
 
-use crate::interval::{Interval, Mapping};
 use crate::interval::Range;
+use crate::interval::{Interval, Mapping};
 
 pub(crate) struct Almanac {
     pub seeds: Vec<u64>,
@@ -10,15 +10,24 @@ pub(crate) struct Almanac {
 
 impl Almanac {
     pub fn locations(&self, ranges: Vec<Range>) -> Vec<Range> {
-        self.mappings.iter().fold(ranges, |val, next| Almanac::apply_mapping(next, val))
+        self.mappings
+            .iter()
+            .fold(ranges, |val, next| Almanac::apply_mapping(next, val))
     }
 
     pub(crate) fn from_lines(mut lines: Lines<&[u8]>) -> Self {
-        let seeds: Vec<u64> = lines.next().unwrap().unwrap().
-            split_whitespace().filter_map(|s| s.trim().parse().ok()).
-            collect();
+        let seeds: Vec<u64> = lines
+            .next()
+            .unwrap()
+            .unwrap()
+            .split_whitespace()
+            .filter_map(|s| s.trim().parse().ok())
+            .collect();
 
-        Almanac { seeds, mappings: Almanac::mapping(lines) }
+        Almanac {
+            seeds,
+            mappings: Almanac::mapping(lines),
+        }
     }
 
     fn mapping(lines: Lines<&[u8]>) -> Vec<Mapping> {
@@ -48,23 +57,29 @@ impl Almanac {
             mappings.push(curr.iter().copied().collect());
         }
 
-        mappings.iter_mut().
-            for_each(|m| m.sort_by(|a, b| u64::cmp(&a.range.start, &b.range.start)));
+        mappings
+            .iter_mut()
+            .for_each(|m| m.sort_by(|a, b| u64::cmp(&a.range.start, &b.range.start)));
         mappings
     }
 
     fn apply_mapping(m: &Mapping, ranges: Vec<Range>) -> Vec<Range> {
-        Range::reduce(ranges.iter().
-            flat_map(|r| Almanac::apply_mapping_to_range(m, r)).collect())
+        Range::reduce(
+            ranges
+                .iter()
+                .flat_map(|r| Almanac::apply_mapping_to_range(m, r))
+                .collect(),
+        )
     }
 
     fn apply_mapping_to_range(m: &Mapping, range: &Range) -> Vec<Range> {
         assert!(range.start <= range.end);
         let mut start = range.start;
 
-        let mut res: Vec<Range> = m.iter().
-            skip_while(|m| m.range.start > range.end).
-            flat_map(|m| {
+        let mut res: Vec<Range> = m
+            .iter()
+            .skip_while(|m| m.range.start > range.end)
+            .flat_map(|m| {
                 let curr = m.range;
                 let mut i: Vec<Range> = Vec::new();
                 if start > range.end || curr.end < start || range.end < curr.start {
@@ -74,11 +89,18 @@ impl Almanac {
 
                 if start < curr.start {
                     // have an idempotent part
-                    i.push(Range { start, end: curr.start - 1 });
+                    i.push(Range {
+                        start,
+                        end: curr.start - 1,
+                    });
                     start = curr.start;
                 }
 
-                let end = if range.end > curr.end { curr.end } else { range.end };
+                let end = if range.end > curr.end {
+                    curr.end
+                } else {
+                    range.end
+                };
                 i.push(Range {
                     start: m.value_for(start),
                     end: m.value_for(end),
@@ -86,11 +108,15 @@ impl Almanac {
                 start = end + 1;
 
                 i
-            }).collect();
+            })
+            .collect();
 
         if start <= range.end {
             // have an idempotent tail
-            res.push(Range { start, end: range.end });
+            res.push(Range {
+                start,
+                end: range.end,
+            });
         }
         return Range::reduce(res);
     }

@@ -2,7 +2,11 @@ use std::collections::HashSet;
 
 use lib::point::Point;
 
-pub(crate) fn get_loop(lines: &Vec<Vec<char>>, start: &(usize, usize), treat: char) -> Option<HashSet<Point>> {
+pub(crate) fn get_loop(
+    lines: &Vec<Vec<char>>,
+    start: &(usize, usize),
+    treat: char,
+) -> Option<HashSet<Point>> {
     let start = Point {
         x: start.0 as isize,
         y: start.1 as isize,
@@ -66,27 +70,33 @@ pub(crate) fn get_loop(lines: &Vec<Vec<char>>, start: &(usize, usize), treat: ch
         result.insert(pos);
         (prev, pos) = (Some(pos), next.unwrap());
         pipe = lines[pos.x as usize][pos.y as usize];
-        if pos == start { pipe = treat }
+        if pos == start {
+            pipe = treat
+        }
         // check that we can actually connect by matching pipe
-        if prev.unwrap().x < pos.x { // pos below prev
+        if prev.unwrap().x < pos.x {
+            // pos below prev
             match pipe {
                 '|' | 'L' | 'J' => {}
-                _ => return None
+                _ => return None,
             }
-        } else if prev.unwrap().x > pos.x { // pos above prev
+        } else if prev.unwrap().x > pos.x {
+            // pos above prev
             match pipe {
                 '|' | 'F' | '7' => {}
-                _ => return None
+                _ => return None,
             }
-        } else if prev.unwrap().y < pos.y { // pos right to prev
+        } else if prev.unwrap().y < pos.y {
+            // pos right to prev
             match pipe {
                 '-' | 'J' | '7' => {}
-                _ => return None
+                _ => return None,
             }
-        } else if prev.unwrap().y > pos.y { // pos left to prev
+        } else if prev.unwrap().y > pos.y {
+            // pos left to prev
             match pipe {
                 '-' | 'L' | 'F' => {}
-                _ => return None
+                _ => return None,
             }
         } else {
             return None;

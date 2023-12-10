@@ -1,8 +1,8 @@
 use lib::time_solution::*;
 
+mod card;
 mod part1;
 mod part2;
-mod card;
 
 fn main() {
     solve_part(part1::solve, "part 1", None);

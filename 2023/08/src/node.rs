@@ -1,13 +1,16 @@
 use std::collections::HashMap;
 
-pub(crate) enum Dir { L, R }
+pub(crate) enum Dir {
+    L,
+    R,
+}
 
 impl Dir {
     pub(crate) fn from_char(c: char) -> Option<Dir> {
         match c {
             'L' => Some(Dir::L),
             'R' => Some(Dir::R),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -25,9 +28,12 @@ impl<'a> Node<'a> {
         let mut idx: HashMap<&str, usize> = HashMap::new();
         let mut nodes: Vec<Node> = Vec::new();
 
-        for (i, s) in lines.iter()
+        for (i, s) in lines
+            .iter()
             .map(|s| s.trim())
-            .filter(|s| !s.is_empty()).enumerate() {
+            .filter(|s| !s.is_empty())
+            .enumerate()
+        {
             nodes.push(Node {
                 label: &s[0..=2],
                 left: &s[7..=9],
@@ -54,19 +60,33 @@ impl<'a> Node<'a> {
     }
 
     pub(crate) fn path_len<CHK>(start: &Node, dirs: &Vec<Dir>, nodes: &Vec<Node>, done: CHK) -> u64
-        where CHK: Fn(&Node) -> bool
+    where
+        CHK: Fn(&Node) -> bool,
     {
         let mut curr = start;
-        dirs.iter().cycle().enumerate().find(|(_, dir)| {
-            curr = curr.get_next(dir, nodes);
-            done(curr)
-        }).unwrap().0 as u64 + 1
+        dirs.iter()
+            .cycle()
+            .enumerate()
+            .find(|(_, dir)| {
+                curr = curr.get_next(dir, nodes);
+                done(curr)
+            })
+            .unwrap()
+            .0 as u64
+            + 1
     }
 
-    pub(crate) fn paths_len<CHK>(starts: &Vec<&Node>, dirs: &Vec<Dir>, nodes: &Vec<Node>, done: CHK) -> u64
-        where CHK: Fn(&Node) -> bool + Clone
+    pub(crate) fn paths_len<CHK>(
+        starts: &Vec<&Node>,
+        dirs: &Vec<Dir>,
+        nodes: &Vec<Node>,
+        done: CHK,
+    ) -> u64
+    where
+        CHK: Fn(&Node) -> bool + Clone,
     {
-        starts.iter()
+        starts
+            .iter()
             .map(|node| Node::path_len(node, dirs, nodes, done.clone()))
             .fold(1u64, |s, x| lcm(s, x))
     }

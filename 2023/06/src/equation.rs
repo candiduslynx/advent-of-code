@@ -29,5 +29,5 @@ fn solve_sq_eq(a: f64, b: f64, c: f64) -> Option<(f64, f64)> {
 
     let x = -0.5 * b / a;
     let ds = 0.5 * d.sqrt() / a;
-    Some((x-ds, x+ds))
+    Some((x - ds, x + ds))
 }

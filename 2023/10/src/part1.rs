@@ -31,5 +31,7 @@ pub(crate) fn solve(path: &str) -> usize {
     ['|', '-', 'F', '7', 'J', 'L']
         .into_iter()
         .find_map(|c| get_loop(&lines, &start, c))
-        .unwrap().len() / 2
+        .unwrap()
+        .len()
+        / 2
 }

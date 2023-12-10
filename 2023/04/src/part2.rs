@@ -5,8 +5,11 @@ use std::iter;
 use crate::card;
 
 pub(crate) fn solve(path: &str) -> u64 {
-    let wins: Vec<usize> = read(path).unwrap().lines().
-        map(|s| card::winning_numbers(s.unwrap())).collect();
+    let wins: Vec<usize> = read(path)
+        .unwrap()
+        .lines()
+        .map(|s| card::winning_numbers(s.unwrap()))
+        .collect();
 
     let mut cards: Vec<u64> = iter::repeat(1).take(wins.len()).collect();
 

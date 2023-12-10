@@ -16,8 +16,10 @@ impl Interval {
     }
 
     pub(crate) fn from_str(s: &str) -> Self {
-        let values: Vec<u64> = s.split_whitespace().
-            filter_map(|s| s.trim().parse().ok()).collect();
+        let values: Vec<u64> = s
+            .split_whitespace()
+            .filter_map(|s| s.trim().parse().ok())
+            .collect();
         assert_eq!(values.len(), 3);
         Interval {
             value: values[0],
@@ -39,8 +41,15 @@ impl Range {
     pub(crate) fn from_pairs(kv: &Vec<u64>) -> Vec<Range> {
         let starts = kv.iter().step_by(2);
         let ranges = kv.iter().skip(1).step_by(2);
-        Range::reduce(starts.zip(ranges).
-            map(|(&start, &len)| Range { start, end: start + len - 1 }).collect())
+        Range::reduce(
+            starts
+                .zip(ranges)
+                .map(|(&start, &len)| Range {
+                    start,
+                    end: start + len - 1,
+                })
+                .collect(),
+        )
     }
 
     pub(crate) fn reduce(ranges: Vec<Range>) -> Vec<Range> {

@@ -1,9 +1,9 @@
 use lib::time_solution::*;
 
+mod almanac;
+mod interval;
 mod part1;
 mod part2;
-mod interval;
-mod almanac;
 
 fn main() {
     solve_part(part1::solve, "part 1", None);

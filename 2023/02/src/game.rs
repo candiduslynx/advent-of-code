@@ -19,7 +19,7 @@ impl Mov {
             "red" => self.r += amount,
             "green" => self.g += amount,
             "blue" => self.b += amount,
-            _ => panic!("{}", balls)
+            _ => panic!("{}", balls),
         }
 
         self
@@ -30,8 +30,9 @@ impl Mov {
     }
 
     fn from_str(balls: &str) -> Self {
-        balls.split(", ").
-            fold(Mov { r: 0, g: 0, b: 0 }, |sum, x| sum.add_color(x))
+        balls
+            .split(", ")
+            .fold(Mov { r: 0, g: 0, b: 0 }, |sum, x| sum.add_color(x))
     }
 }
 
@@ -47,24 +48,32 @@ impl Game {
     }
 
     fn minimal(&self) -> Mov {
-        self.moves.iter().
-            fold(Mov { r: 0, g: 0, b: 0 },
-                 |mut sum, x| {
-                     if sum.r < x.r { sum.r = x.r }
-                     if sum.g < x.g { sum.g = x.g }
-                     if sum.b < x.b { sum.b = x.b }
-                     sum
-                 })
+        self.moves
+            .iter()
+            .fold(Mov { r: 0, g: 0, b: 0 }, |mut sum, x| {
+                if sum.r < x.r {
+                    sum.r = x.r
+                }
+                if sum.g < x.g {
+                    sum.g = x.g
+                }
+                if sum.b < x.b {
+                    sum.b = x.b
+                }
+                sum
+            })
     }
 
     pub(crate) fn power(self) -> u32 {
         self.minimal().power()
     }
 
-
     pub(crate) fn from_str(game: String) -> Self {
         if game.is_empty() {
-            return Game { moves: vec![], id: 0 };
+            return Game {
+                moves: vec![],
+                id: 0,
+            };
         }
 
         let parts: Vec<&str> = game.split(": ").collect();
