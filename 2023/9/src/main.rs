@@ -1,8 +1,8 @@
 use lib::time_solution::*;
 
+mod binomial;
 mod part1;
 mod part2;
-mod binomial;
 
 fn main() {
     solve_part(part1::solve, "part 1", None);

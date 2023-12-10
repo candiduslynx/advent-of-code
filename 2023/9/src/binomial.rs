@@ -1,17 +1,21 @@
 // pre-calc binomial coefficients
 pub(crate) fn cnk(max: usize) -> Vec<Vec<i64>> {
-    if max == 0 {
-        return vec![vec![1]];
-    }
+    let mut res: Vec<Vec<i64>> = Vec::new();
+    let mut last: Vec<i64> = vec![1];
+    res.push(last.clone());
 
-    let mut c = cnk(max - 1);
-    let last = c.last().unwrap();
-    let mut cn: Vec<i64> = last.iter().skip(1).zip(last.iter())
-        .map(|(x, y)| x+y).fold(vec![1], |mut c, x| {
-        c.push(x);
-        c
-    });
-    cn.push(1);
-    c.push(cn);
-    c
+    for _n in 1..=max {
+        last = last
+            .iter()
+            .skip(1)
+            .zip(last.iter())
+            .map(|(x, y)| x + y)
+            .fold(vec![1], |mut c, x| {
+                c.push(x);
+                c
+            });
+        last.push(1);
+        res.push(last.clone());
+    }
+    res
 }
