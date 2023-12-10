@@ -1,3 +1,4 @@
+use lib::point::Point;
 use std::fs::read;
 use std::io::BufRead;
 
@@ -12,7 +13,7 @@ pub(crate) fn solve(path: &str) -> usize {
         .map(|s| s.chars().collect())
         .collect();
 
-    let start: (usize, usize) = lines
+    let start = lines
         .iter()
         .enumerate()
         .find_map(|(x, row)| {
@@ -23,14 +24,17 @@ pub(crate) fn solve(path: &str) -> usize {
             if y.is_none() {
                 None
             } else {
-                Some((x, y.unwrap()))
+                Some(Point {
+                    x: x as isize,
+                    y: y.unwrap() as isize,
+                })
             }
         })
         .unwrap();
 
     ['|', '-', 'F', '7', 'J', 'L']
-        .into_iter()
-        .find_map(|c| get_loop(&lines, &start, c))
+        .iter()
+        .find_map(|c| get_loop(&lines, start, c))
         .unwrap()
         .len()
         / 2

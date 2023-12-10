@@ -14,7 +14,7 @@ pub(crate) fn solve(path: &str) -> u32 {
         .map(|s| s.chars().collect())
         .collect();
 
-    let start: (usize, usize) = lines
+    let start = lines
         .iter()
         .enumerate()
         .find_map(|(x, row)| {
@@ -25,20 +25,23 @@ pub(crate) fn solve(path: &str) -> u32 {
             if y.is_none() {
                 None
             } else {
-                Some((x, y.unwrap()))
+                Some(Point {
+                    x: x as isize,
+                    y: y.unwrap() as isize,
+                })
             }
         })
         .unwrap();
 
     let (proper, cycle) = ['|', '-', 'F', '7', 'J', 'L']
-        .into_iter()
-        .map(|c| (c, get_loop(&lines, &start, c)))
+        .iter()
+        .map(|c| (c, get_loop(&lines, start, c)))
         .find(|(_, c)| c.is_some())
         .unwrap();
     let cycle = cycle.unwrap();
 
     // update the char
-    lines[start.0][start.1] = proper;
+    lines[start.x as usize][start.y as usize] = *proper;
 
     lines
         .iter()
@@ -46,25 +49,22 @@ pub(crate) fn solve(path: &str) -> u32 {
         .map(|(x, row)| {
             let mut inside = false;
             let mut sum = 0u32;
-            let mut h_start: Option<char> = None;
+            let mut h_start = &'?';
             for y in 0..row.len() {
                 if cycle.contains(&Point {
                     x: x as isize,
                     y: y as isize,
                 }) {
-                    let curr = lines[x][y];
-                    match curr {
+                    match lines[x][y] {
                         '|' => inside = !inside,
-                        'F' | 'L' => h_start = Some(curr),
+                        'F' | 'L' => h_start = &lines[x][y],
                         '7' => match h_start {
-                            Some('F') => {}
-                            Some('L') => inside = !inside,
-                            _ => panic!("end {curr} found, but start is {h_start:?}"),
+                            'L' => inside = !inside,
+                            _ => {}
                         },
                         'J' => match h_start {
-                            Some('F') => inside = !inside,
-                            Some('L') => {}
-                            _ => panic!("end {curr} found, but start is {h_start:?}"),
+                            'F' => inside = !inside,
+                            _ => {}
                         },
                         _ => {}
                     }
