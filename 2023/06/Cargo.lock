@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "aoc-2023-6"
+name = "aoc-2023-06"
 version = "0.1.0"
 dependencies = [
  "lib",
