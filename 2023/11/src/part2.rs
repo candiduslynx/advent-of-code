@@ -62,8 +62,8 @@ pub(crate) fn solve(path: &str) -> u64 {
                 .iter()
                 .map(|o| {
                     let dst = g.dst_flat(o) as u64
-                        + 1000000 * (intersections(g.x, o.x, &empty_x) as u64)
-                        + 1000000 * (intersections(g.y, o.y, &empty_y) as u64);
+                        + (1000000 - 1) * (intersections(g.x, o.x, &empty_x) as u64)
+                        + (1000000 - 1) * (intersections(g.y, o.y, &empty_y) as u64);
                     dst
                 })
                 .sum::<u64>()
