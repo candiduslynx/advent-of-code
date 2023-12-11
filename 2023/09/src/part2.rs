@@ -4,6 +4,11 @@ use std::io::BufRead;
 use crate::binomial;
 
 // part 2 is to find x_(-1), which is the same as to solve part 1 for reversed sequence
+// it can also be treated as
+// to find X = x_(-) we're solving the eq:
+// sum(i=-1..=(n))( (-1.pow(i+1))*c(n+1,i+1)*x_i) = 0
+// => X = sum(i=0..=n)( (-1.pow(i))*c(n+1,i+1)*x_i)
+// where c(n,k) = (n!)/((n-k)!*k!)
 pub(crate) fn solve(path: &str) -> i64 {
     let c = binomial::cnk(25);
     read(path)
@@ -17,18 +22,13 @@ pub(crate) fn solve(path: &str) -> i64 {
                 .filter_map(|s| s.parse::<i64>().ok())
                 .collect();
             let n = nums.len();
-            // based on the len we want -1,1,... or 1,-1,... as coefficients
-            (if n & 1 == 0 {
-                vec![-1i64, 1i64]
-            } else {
-                vec![1i64, -1i64]
-            })
-            .iter()
-            .cycle()
-            .zip(nums.iter().rev())
-            .enumerate()
-            .map(|(i, (k, x))| k * c[n][i] * x)
-            .sum::<i64>()
+            vec![1i64, -1i64]
+                .iter()
+                .cycle()
+                .zip(nums.iter())
+                .enumerate()
+                .map(|(i, (k, x))| k * c[n][i + 1] * x)
+                .sum::<i64>()
         })
         .sum()
 }
