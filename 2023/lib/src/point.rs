@@ -5,6 +5,10 @@ pub struct Point {
 }
 
 impl Point {
+    pub fn dst_flat(&self, other: &Self) -> isize {
+        (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+
     pub fn neighbors(&self) -> [Self; 8] {
         [
             Point {
