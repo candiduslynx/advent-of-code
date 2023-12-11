@@ -7,12 +7,11 @@ pub(crate) fn solve(path: &str) -> u32 {
         .lines()
         .map(|s| s.unwrap())
         .filter(|s| !s.is_empty())
-        .map(|s| digits(s.as_str()))
-        .map(|digits| digits.0 * 10 + digits.1)
+        .map(|s| num(s.as_str()))
         .sum()
 }
 
-fn digits(s: &str) -> (u32, u32) {
+fn num(s: &str) -> u32 {
     let mut padded = String::from("____");
     padded.push_str(s);
     padded.push_str("____");
@@ -29,14 +28,15 @@ fn digits(s: &str) -> (u32, u32) {
         .enumerate()
         .find_map(|(i, _)| last_digit(&padded[..len - i - 4]))
         .unwrap();
-    (first, last)
+
+    (first * 10 + last) as u32
 }
 
-fn first_digit(s: &str) -> Option<u32> {
+fn first_digit(s: &str) -> Option<u8> {
     let bytes = s.as_bytes();
     let c = &bytes[0];
     if c.is_ascii_digit() {
-        return Some((c - b'0') as u32);
+        return Some(c - b'0');
     }
 
     [
@@ -46,18 +46,18 @@ fn first_digit(s: &str) -> Option<u32> {
     .enumerate()
     .find_map(|(i, &pfx)| {
         if s.starts_with(pfx) {
-            Some(i as u32)
+            Some(i as u8)
         } else {
             None
         }
     })
 }
 
-fn last_digit(s: &str) -> Option<u32> {
+fn last_digit(s: &str) -> Option<u8> {
     let bytes = s.as_bytes();
     let c = &bytes[bytes.len() - 1];
     if c.is_ascii_digit() {
-        return Some((c - b'0') as u32);
+        return Some(c - b'0');
     }
 
     [
@@ -67,7 +67,7 @@ fn last_digit(s: &str) -> Option<u32> {
     .enumerate()
     .find_map(|(i, &pfx)| {
         if s.ends_with(pfx) {
-            Some(i as u32)
+            Some(i as u8)
         } else {
             None
         }
