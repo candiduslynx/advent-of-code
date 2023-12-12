@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 pub(crate) fn solve(s: &str, repetitions: usize) -> u64 {
     let parts: Vec<&str> = s.split_whitespace().collect();
     assert_eq!(parts.len(), 2);
@@ -9,183 +11,128 @@ pub(crate) fn solve(s: &str, repetitions: usize) -> u64 {
         .map(|s| s.parse().unwrap())
         .collect();
 
-    println!("{pattern} | {broken:?}");
-    possibilities(pattern, &broken)
+    let start = Instant::now();
+    let p = possibilities(pattern, &broken);
+    let dur = start.elapsed();
+    println!("{pattern} | {broken:?} -> {p}, took {dur:?}");
+    p
 }
 
-fn possibilities(s: &str, broken: &Vec<usize>) -> u64 {
-    remaining(&partition(s), &broken).unwrap()
+fn possibilities(s: &str, broken: &[usize]) -> u64 {
+    let len = s.len();
+    let mut ways: Vec<u64> = place_first(s, broken[0]);
+    // println!("placements {:?} for {s}: {:?}", &broken[..1], &ways[1..]);
+    for (idx, &next) in broken.iter().enumerate().skip(1) {
+        let first_non_zero = ways
+            .iter()
+            .enumerate()
+            .find(|(_, &n)| n > 0)
+            .map(|(i, _)| i)
+            .unwrap();
+        // println!(
+        //     "at least {first_non_zero:?} len is required for {:?}",
+        //     &broken[..idx]
+        // );
+        let at_least = first_non_zero + next + 1;
+
+        let mut row = vec![0u64; at_least];
+
+        for ll in at_least..=len {
+            // println!(">>> {:?} in {} start", &broken[..idx + 1], &s[..ll]);
+            // calc the possibilities to grab (idx) elems in len = l
+            let w = ways
+                .iter()
+                .enumerate()
+                .take(ll - next) // take up to len = ll-next
+                .filter(|(_, &n)| n > 0)
+                .map(|(l, &n)| {
+                    // println!(
+                    //     "we have {n} way(s) to place {:?} in \"{}\"",
+                    //     &broken[..idx],
+                    //     &s[..l]
+                    // );
+                    // we have n ways to get idx items in len=l
+                    // remaining are ours to grab
+                    // we have len = l, so last taken char is at &s[l-1]
+                    if s.as_bytes()[l] == b'#' {
+                        // println!("s.as_bytes()[{l}] = #");
+                        // we can't split here (as the broken have to be spread by at least a single dot)
+                        return 0u64;
+                    }
+
+                    // now look at he remaining part: &s[l+1..ll]
+                    // to dedup we'll be placing only at the beginning of the slice
+                    let part = &s[l + 1..ll];
+                    if can_place_at_start(part, next) {
+                        // println!("we can place {next} at {part} start, take {n}");
+                        n
+                    } else {
+                        // println!("we can't place {next} at {part} start, take 0");
+                        0u64
+                    }
+                    // let single = place_single(part, next);
+                    // println!(
+                    //     "(have={idx} parts, taking {next}): &s[{}..{ll}]={part} -> {single}*{n}",
+                    //     l + 1
+                    // );
+                    // n * single
+                })
+                .sum();
+            // println!(
+            //     "<<< {w} ways to place {:?} in {}",
+            //     &broken[..idx + 1],
+            //     &s[..ll]
+            // );
+            row.push(w);
+        }
+        // println!("placing {:?} for {s}: {:?}", &broken[..=idx], &row[1..]);
+        ways = row;
+    }
+
+    ways[s.len()]
 }
 
-fn remaining(partitions: &[&str], broken: &[usize]) -> Option<u64> {
-    // println!("{partitions:?} | {broken:?}");
-
-    if partitions.is_empty() {
-        return match broken.len() {
-            0 => Some(1),
-            _ => None,
-        };
-    }
-
-    let curr = partitions[0];
-    let &max = broken.iter().max().unwrap();
-    if max < curr.len() {
-        // curr has to have at least 1 dot
-    }
-    let res = partition_possibilities(curr, broken)
-        .iter()
-        .map(|(amount, p)| {
-            let remaining = remaining(&partitions[1..], &broken[*amount..]);
-            // println!("{curr:?} took {amount} part(s) x {p} time(s) from {broken:?}, tail possibilities: {remaining:?}");
-            if remaining.is_none() {
-                0
-            } else {
-                p * remaining.unwrap()
-            }
-        })
-        .sum();
-    if res == 0 {
-        None
-    } else {
-        Some(res)
-    }
-}
-
-pub(crate) fn partition(s: &str) -> Vec<&str> {
-    s.split(".").filter(|&s| !s.is_empty()).collect()
-}
-
-// look at the partition (without any dots)
-// and tell how many pieces of the broken parts fit
-// the results can be used to skip the corresponding amounts of broken parts
-// the result elem is amount & how many ways to achieve it are there
-fn partition_possibilities(s: &str, broken: &[usize]) -> Vec<(usize, u64)> {
-    if s.as_bytes().iter().find(|&&b| b == b'#').is_none() {
-        return max_possibilities(s.len(), broken);
-    }
-    let zero = take_zero_parts(s);
-    if broken.len() == 0 {
-        return zero;
-    }
-
-    let expected = broken[0];
-    if s.len() < expected {
-        return zero;
-    } else if s.len() == expected {
-        // we can take 1 element from the broken parts at hand, as the partition doesn't have dots
-        return dedup(vec![zero, vec![(1usize, 1u64)]], 1);
-    }
-
-    let first_hash: Vec<(usize, u64)> = if s.as_bytes()[expected] == b'?' {
-        // are able to take the part
-        partition_possibilities(&s[expected + 1..], &broken[1..])
-            .into_iter()
-            .map(|(amount, p)| (amount + 1, p))
-            .collect()
-    } else {
-        vec![]
-    };
-
-    let first_dot: Vec<(usize, u64)> = if s.as_bytes()[0] == b'?' {
-        partition_possibilities(&s[1..], broken)
-    } else {
-        vec![]
-    };
-
-    let result = dedup(vec![first_hash, first_dot], s.len());
-    // println!("{s} | {broken:?} -> {result:?}");
-    result
-}
-
-fn take_zero_parts(s: &str) -> Vec<(usize, u64)> {
-    match s.as_bytes().iter().find(|&&b| b == b'#') {
-        None => vec![(0, 1)],
-        Some(_) => vec![],
-    }
-}
-
-fn dedup(a: Vec<Vec<(usize, u64)>>, max: usize) -> Vec<(usize, u64)> {
-    let mut result: Vec<u64> = vec![0u64; max + 1];
-    a.into_iter()
-        .flatten()
-        .for_each(|(amount, times)| result[amount] += times);
-    result
+fn place_first(s: &str, part: usize) -> Vec<u64> {
+    (0..=s.len())
         .into_iter()
-        .enumerate()
-        .filter(|&(_, x)| x > 0u64)
+        .map(|l| place_single(&s[..l], part))
         .collect()
 }
 
-// solve for ??????? (len = n)
-fn max_possibilities(len: usize, broken: &[usize]) -> Vec<(usize, u64)> {
-    if broken.is_empty() {
-        return vec![(0, 1)];
-    }
-    let first = broken[0];
-    if len < first {
-        return vec![(0, 1)];
-    } else if broken.len() == 1 {
-        return vec![(0, 1), (1, (len - first + 1) as u64)];
-    }
-
-    let mut calc: Vec<Vec<u64>> = vec![vec![1u64; len + 1]]; // [amount][len] -> ways to achieve
-    let mut one: Vec<u64> = vec![0u64; first];
-    for i in first..=len {
-        one.push((i - first + 1) as u64);
-    }
-    calc.push(one);
-
-    let mut at_least = first;
-    for idx in 1usize..broken.len() {
-        let next = broken[idx];
-        at_least += next + 1;
-        if at_least > len {
-            break;
-        }
-
-        let mut row = vec![0u64; at_least];
-        for ll in at_least..=len {
-            // calc the possibilities to grab (idx) elems in len = l
-            row.push(
-                // idx shows the prev amount, use that
-                calc[idx]
-                    .iter()
-                    .enumerate()
-                    .take(ll - next) // limit len to a plausible one
-                    .filter(|(_, &n)| n > 0)
-                    .map(|(l, &n)| {
-                        // we have n ways to get idx-1 items in len l
-                        // remaining are ours to grab
-                        // N = (len - l - 1) = how much place we have to take next elems
-                        // ways = N-next+1
-                        // (len - l - 1) -next + 1 = len - l - next
-                        let ways = (len - l - next) as u64;
-                        ways * n // don't forget to factor the prev items
-                    })
-                    .sum(),
-            )
-        }
-        calc.push(row);
-    }
-
-    let res = calc
-        .into_iter()
-        .enumerate()
-        .map(|(i, r)| (i, r[len]))
-        .collect();
-    res
+fn can_place_zero(s: &str) -> bool {
+    s.as_bytes().iter().find(|&&b| b == b'#').is_none()
 }
 
-// if we have the ways = [amount][len]->possibilities
-// placing next is simple
-// say, we have up to amount = A
-// to calc for amount = A+1:
-// ways[A+1][len: 0..(sum_len + curr + A (dots between))] = 0
-// for others: we take ways of putting in first M elems
-// then we take the remaining pattern & check the amount of ways to put next part there (=N)
-// if it's impossible, we should account for 0
-// if possible, store N * ways we used
+fn can_place_at_start(s: &str, len: usize) -> bool {
+    s[..len].as_bytes().iter().find(|&&b| b == b'.').is_none() && can_place_zero(&s[len..])
+}
 
-// the result should be res[total][total len]
-// we also don't actually require to store the whole array, just the prev row
-// for 0 elems we store 1
+fn place_single(s: &str, broken: usize) -> u64 {
+    if s.len() < broken {
+        return 0;
+    } else if s.len() == broken {
+        // we only can consume this as a whole
+        return match s.as_bytes().iter().find(|&&b| b == b'.') {
+            None => 1,
+            _ => 0,
+        };
+    }
+
+    let as_dot = if s.as_bytes()[0] == b'#' {
+        0u64
+    } else {
+        place_single(&s[1..], broken)
+    };
+
+    let as_hash = if s.as_bytes()[0] == b'.' {
+        0u64
+    } else if !can_place_zero(&s[broken..]) {
+        0u64
+    } else {
+        match s.as_bytes()[1..broken].iter().find(|&&b| b == b'.') {
+            None => 1,
+            _ => 0,
+        }
+    };
+    as_dot + as_hash
+}
