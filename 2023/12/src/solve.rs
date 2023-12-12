@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 pub(crate) fn solve(s: &str, repetitions: usize) -> u64 {
     let parts: Vec<&str> = s.split_whitespace().collect();
     assert_eq!(parts.len(), 2);
@@ -11,18 +9,14 @@ pub(crate) fn solve(s: &str, repetitions: usize) -> u64 {
         .map(|s| s.parse().unwrap())
         .collect();
 
-    let start = Instant::now();
-    let p = possibilities(pattern, &broken);
-    let dur = start.elapsed();
-    println!("{pattern} | {broken:?} -> {p}, took {dur:?}");
-    p
+    possibilities(pattern, &broken)
 }
 
 fn possibilities(s: &str, broken: &[usize]) -> u64 {
     let len = s.len();
     let mut ways: Vec<u64> = place_first(s, broken[0]);
     // println!("placements {:?} for {s}: {:?}", &broken[..1], &ways[1..]);
-    for (idx, &next) in broken.iter().enumerate().skip(1) {
+    for &next in broken.iter().skip(1) {
         let first_non_zero = ways
             .iter()
             .enumerate()

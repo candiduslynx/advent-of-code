@@ -9,11 +9,6 @@ pub(crate) fn solve(path: &str) -> u64 {
         .lines()
         .map(|s| s.unwrap())
         .filter(|s| !s.is_empty())
-        .enumerate()
-        .map(|(i, s)| {
-            let res = solve::solve(&s, 1);
-            println!("{i:4} >>> {s} -> {res}");
-            res
-        })
+        .map(|s| solve::solve(&s, 1))
         .sum()
 }
