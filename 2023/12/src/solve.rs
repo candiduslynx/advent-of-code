@@ -30,18 +30,19 @@ where
 
         let mut row = vec![0u64; at_least];
         for ll in at_least..=len {
+            let s = &s[..ll];
             // calc the possibilities to grab (idx) elems in len = l
             row.push(
                 ways.iter()
                     .enumerate()
-                    // take up to len = ll-next
+                    // take up to len = ll-next-1 (idx in vector = prefix len)
                     .take(ll - next)
                     // only parts where we can actually spread idx-1 elements
                     .filter(|(_, &n)| n > 0)
                     // we have to be able to split
                     .filter(|(l, _)| s.as_bytes()[*l] != b'#')
                     // to dedup we'll be placing only at the beginning of the slice
-                    .filter(|(l, _)| can_place_at_start(&s[l + 1..ll], next))
+                    .filter(|(l, _)| can_place_at_start(&s[l + 1..], next))
                     // we have n ways to get idx items in len=l
                     .map(|(_, n)| n)
                     .sum(),

@@ -1,6 +1,8 @@
 use std::fs::read;
 use std::io::BufRead;
 
+use rayon::prelude::*;
+
 use crate::solve;
 
 pub(crate) fn solve(path: &str) -> u64 {
@@ -9,6 +11,7 @@ pub(crate) fn solve(path: &str) -> u64 {
         .lines()
         .map(|s| s.unwrap())
         .filter(|s| !s.is_empty())
-        .map(|s| solve::solve(&s, 5))
+        .par_bridge()
+        .map(|s| solve::solve(s.as_str(), 5))
         .sum()
 }
