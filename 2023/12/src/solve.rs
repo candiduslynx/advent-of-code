@@ -15,7 +15,6 @@ pub(crate) fn solve(s: &str, repetitions: usize) -> u64 {
 fn possibilities(s: &str, broken: &[usize]) -> u64 {
     let len = s.len();
     let mut ways: Vec<u64> = place_first(s, broken[0]);
-    // println!("placements {:?} for {s}: {:?}", &broken[..1], &ways[1..]);
     for &next in broken.iter().skip(1) {
         let first_non_zero = ways
             .iter()
@@ -23,63 +22,35 @@ fn possibilities(s: &str, broken: &[usize]) -> u64 {
             .find(|(_, &n)| n > 0)
             .map(|(i, _)| i)
             .unwrap();
-        // println!(
-        //     "at least {first_non_zero:?} len is required for {:?}",
-        //     &broken[..idx]
-        // );
         let at_least = first_non_zero + next + 1;
 
         let mut row = vec![0u64; at_least];
 
         for ll in at_least..=len {
-            // println!(">>> {:?} in {} start", &broken[..idx + 1], &s[..ll]);
             // calc the possibilities to grab (idx) elems in len = l
-            let w = ways
-                .iter()
-                .enumerate()
-                .take(ll - next) // take up to len = ll-next
-                .filter(|(_, &n)| n > 0)
-                .map(|(l, &n)| {
-                    // println!(
-                    //     "we have {n} way(s) to place {:?} in \"{}\"",
-                    //     &broken[..idx],
-                    //     &s[..l]
-                    // );
-                    // we have n ways to get idx items in len=l
-                    // remaining are ours to grab
-                    // we have len = l, so last taken char is at &s[l-1]
-                    if s.as_bytes()[l] == b'#' {
-                        // println!("s.as_bytes()[{l}] = #");
-                        // we can't split here (as the broken have to be spread by at least a single dot)
-                        return 0u64;
-                    }
+            row.push(
+                ways.iter()
+                    .enumerate()
+                    .take(ll - next) // take up to len = ll-next
+                    .filter(|(_, &n)| n > 0)
+                    .map(|(l, &n)| {
+                        // we have n ways to get idx items in len=l
 
-                    // now look at he remaining part: &s[l+1..ll]
-                    // to dedup we'll be placing only at the beginning of the slice
-                    let part = &s[l + 1..ll];
-                    if can_place_at_start(part, next) {
-                        // println!("we can place {next} at {part} start, take {n}");
-                        n
-                    } else {
-                        // println!("we can't place {next} at {part} start, take 0");
-                        0u64
-                    }
-                    // let single = place_single(part, next);
-                    // println!(
-                    //     "(have={idx} parts, taking {next}): &s[{}..{ll}]={part} -> {single}*{n}",
-                    //     l + 1
-                    // );
-                    // n * single
-                })
-                .sum();
-            // println!(
-            //     "<<< {w} ways to place {:?} in {}",
-            //     &broken[..idx + 1],
-            //     &s[..ll]
-            // );
-            row.push(w);
+                        if s.as_bytes()[l] == b'#' {
+                            // we can't split here (as the broken have to be spread by at least a single dot)
+                            return 0u64;
+                        }
+
+                        // to dedup we'll be placing only at the beginning of the slice
+                        if can_place_at_start(&s[l + 1..ll], next) {
+                            n
+                        } else {
+                            0u64
+                        }
+                    })
+                    .sum(),
+            );
         }
-        // println!("placing {:?} for {s}: {:?}", &broken[..=idx], &row[1..]);
         ways = row;
     }
 
