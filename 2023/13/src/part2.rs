@@ -1,6 +1,6 @@
-use std::fs::read;
-use std::io::BufRead;
+use crate::solve;
 
 pub(crate) fn solve(path: &str) -> u64 {
-    read(path).unwrap().lines().count() as u64
+    // 35049 too high
+    solve::solve(path, true)
 }

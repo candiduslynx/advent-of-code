@@ -1,52 +1,50 @@
+use std::fs::read;
+use std::io::BufRead;
+use std::ops::ControlFlow;
+
+pub(crate) fn solve(path: &str, smudge: bool) -> u64 {
+    let fields = read(path).unwrap().lines().map(|s| s.unwrap()).fold(
+        vec![Vec::<Vec<u8>>::new()],
+        |mut state, s| {
+            match s.len() {
+                0 => state.push(vec![]),
+                _ => state.last_mut().unwrap().push(s.as_bytes().to_vec()),
+            }
+            state
+        },
+    );
+
+    fields
+        .iter()
+        .map(|f| patterns(f, smudge))
+        .map(|(x, y)| (x as u64) * 100 + y as u64)
+        .sum()
+}
+
 /// Returns the (rows above the reflection line, columns left to the reflection line)
-pub(crate) fn patterns(field: &Vec<Vec<u8>>) -> (usize, usize) {
+fn patterns(field: &Vec<Vec<u8>>, smudge: bool) -> (usize, usize) {
     let rows: Vec<u32> = field.iter().map(|r| as_num(r)).collect();
     let cols: Vec<u32> = (0..field[0].len())
         .map(|i| field.iter().map(|r| r[i]).collect::<Vec<u8>>())
         .map(|r| as_num(&r))
         .collect();
 
-    let r = mirror_after(&rows);
-    let c = mirror_after(&cols);
-    visualize(field, r, c);
-    (r, c)
+    let r = solution_for_slice(&rows, smudge);
+    let c = solution_for_slice(&cols, smudge);
+    return (r, c);
 }
 
-fn visualize(field: &Vec<Vec<u8>>, rows: usize, cols: usize) {
-    let f = reconstruct(field);
-    let s: Vec<&str> = f.split_whitespace().collect();
-    if rows != 0 {
-        println!();
-        println!("have vertical:");
-        for i in 0..rows {
-            println!("{}", &s[i]);
-        }
-        println!("{}", "-".repeat(s[0].len()));
-        for i in rows..s.len() {
-            println!("{}", &s[i]);
-        }
-        println!();
+fn solution_for_slice(d: &Vec<u32>, smudge: bool) -> usize {
+    let old = mirror_after(d, false);
+    if !smudge {
+        return old;
     }
-    if cols != 0 {
-        println!();
-        println!("have horizontal:");
-        for s in s {
-            println!("{}|{}", &s[..cols], &s[cols..]);
-        }
-        println!();
+    let new = mirror_after(d, true);
+    if new != old {
+        new
+    } else {
+        0
     }
-}
-
-fn reconstruct(field: &Vec<Vec<u8>>) -> String {
-    field
-        .iter()
-        .map(|row| reconstruct_row(row))
-        .collect::<Vec<&str>>()
-        .join("\n")
-}
-
-fn reconstruct_row(row: &Vec<u8>) -> &str {
-    std::str::from_utf8(row).unwrap()
 }
 
 /// there's at most 17 cols or rows in the input, so we can represent a whole string via a single num
@@ -65,9 +63,9 @@ fn as_num(data: &[u8]) -> u32 {
 }
 
 /// Returns the elements before or after split
-fn mirror_after(d: &Vec<u32>) -> usize {
-    match longest_even_palindrome_from_start(d) {
-        0 => match longest_even_palindrome_from_start(&d.into_iter().rev().map(|&i| i).collect()) {
+fn mirror_after(d: &Vec<u32>, smudge: bool) -> usize {
+    match reflection_point(d, smudge) {
+        0 => match reflection_point(&d.into_iter().rev().map(|&i| i).collect(), smudge) {
             0 => 0,
             v => d.len() - v,
         },
@@ -76,20 +74,29 @@ fn mirror_after(d: &Vec<u32>) -> usize {
 }
 
 /// Returns the amount before the mirror or 0, if none is there
-fn longest_even_palindrome_from_start(d: &Vec<u32>) -> usize {
-    let mut max_l = 0usize;
+/// if we request a smudge to be removed, we will account for an exactly single smudge used
+fn reflection_point(d: &Vec<u32>, smudge: bool) -> usize {
+    // we know we have to have an even number in the palindrome
+    ((1..d.len())
+        .step_by(2)
+        .find(|j| {
+            (0..(j + 1) / 2).try_fold(!smudge, |used, k| {
+                let (dk, djk) = (d[k], d[j - k]);
+                if dk == djk {
+                    return ControlFlow::Continue(used);
+                }
+                if used {
+                    return ControlFlow::Break(false);
+                }
 
-    for j in 0..d.len() {
-        let possible = j + 1;
-        if possible & 1 == 1 {
-            // we know we have to have an even number in the palindrome
-            continue;
-        }
-        match (0..possible / 2).find(|&k| d[k] != d[j - k]) {
-            None => max_l = possible,
-            _ => {}
-        };
-    }
-
-    max_l >> 1 // ~ max_l / 2
+                let possible_smudge = dk ^ djk;
+                if possible_smudge & (possible_smudge - 1) != 0 {
+                    return ControlFlow::Break(false);
+                }
+                ControlFlow::Continue(true)
+            }) == ControlFlow::Continue(true)
+        })
+        .unwrap_or(0)
+        + 1)
+        >> 1
 }
