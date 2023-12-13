@@ -14,6 +14,8 @@ pub(crate) fn solve(s: &str, repetitions: usize) -> u64 {
         &mut HashMap::new(),
     )
 }
+
+/// Splits the input pattern into partitions separated by at least a single `.`
 fn partition(s: &str) -> Vec<&str> {
     s.split(".").filter(|s| !s.is_empty()).collect()
 }
@@ -22,6 +24,8 @@ fn partition(s: &str) -> Vec<&str> {
 /// ```
 /// result = ways to put ALL parts into ALL the partitions
 /// ```
+///
+/// `memo` is a memoization helper (key = (partitions left, parts left))
 
 fn into_partitions(
     partitions: &[&str],
@@ -115,14 +119,6 @@ fn into_single_partition(s: &str, parts: &[usize]) -> Vec<u64> {
     result
 }
 
-fn place_zero(s: &str) -> u64 {
-    if can_place_zero(s) {
-        1u64
-    } else {
-        0u64
-    }
-}
-
 /// Returns the vector of ways to put a single part into the partition prefix.
 /// The resulting vector len is always `s.len() + 1`:
 /// ```
@@ -139,33 +135,37 @@ fn place_first(s: &str, part: usize) -> Vec<u64> {
 /// result = ways to put single part of length=len into the whole s
 /// ```
 fn place_single(s: &str, len: usize) -> u64 {
-    if s.len() < len {
-        return 0;
-    } else if s.len() == len {
-        return placing_at_start(s, len);
-    }
-
-    match s.as_bytes()[0] {
-        b'.' => place_single(&s[1..], len),
-        b'#' => placing_at_start(s, len),
-        b'?' => placing_at_start(s, len) + place_single(&s[1..], len),
-        b => panic!("bad byte {b}"),
-    }
-}
-
-fn placing_at_start(s: &str, len: usize) -> u64 {
-    if can_place_at_start(s, len) {
-        1u64
+    return if s.len() < len {
+        0
+    } else if s.as_bytes()[0] == b'#' {
+        place_at_start(s, len)
     } else {
-        0u64
+        place_at_start(s, len) + place_single(&s[1..], len)
+    };
+}
+
+/// Ways to put only a single part at the very beginning of the partition and nothing else.
+fn place_at_start(s: &str, len: usize) -> u64 {
+    match can_place_at_start(s, len) {
+        true => 1,
+        false => 0,
     }
 }
 
-/// s is assumed to be a partition with no dots
+/// Check if the partition can hold only a single part at the very beginning and nothing else.
 fn can_place_at_start(s: &str, len: usize) -> bool {
     can_place_zero(&s[len..])
 }
 
+/// Ways to put zero parts into the partition and nothing else.
+fn place_zero(s: &str) -> u64 {
+    match can_place_zero(s) {
+        true => 1,
+        false => 0,
+    }
+}
+
+/// Check if the partition can hold zero parts.
 fn can_place_zero(s: &str) -> bool {
     s.as_bytes().iter().find(|&&b| b == b'#').is_none()
 }
