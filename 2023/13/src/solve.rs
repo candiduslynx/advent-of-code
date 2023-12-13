@@ -1,6 +1,5 @@
 use std::fs::read;
 use std::io::BufRead;
-use std::ops::ControlFlow;
 
 pub(crate) fn solve(path: &str, smudge: bool) -> u64 {
     let fields = read(path).unwrap().lines().map(|s| s.unwrap()).fold(
@@ -14,11 +13,13 @@ pub(crate) fn solve(path: &str, smudge: bool) -> u64 {
         },
     );
 
-    fields
+    let (x, y) = fields
         .iter()
         .map(|f| patterns(f, smudge))
-        .map(|(x, y)| (x as u64) * 100 + y as u64)
-        .sum()
+        .reduce(|(x, y), (a, b)| (x + a, y + b))
+        .unwrap();
+
+    (x as u64) * 100 + y as u64
 }
 
 /// Returns the (rows above the reflection line, columns left to the reflection line)
@@ -29,22 +30,7 @@ fn patterns(field: &Vec<Vec<u8>>, smudge: bool) -> (usize, usize) {
         .map(|r| as_num(&r))
         .collect();
 
-    let r = solution_for_slice(&rows, smudge);
-    let c = solution_for_slice(&cols, smudge);
-    return (r, c);
-}
-
-fn solution_for_slice(d: &Vec<u32>, smudge: bool) -> usize {
-    let old = mirror_after(d, false);
-    if !smudge {
-        return old;
-    }
-    let new = mirror_after(d, true);
-    if new != old {
-        new
-    } else {
-        0
-    }
+    return (mirror_after(&rows, smudge), mirror_after(&cols, smudge));
 }
 
 /// there's at most 17 cols or rows in the input, so we can represent a whole string via a single num
@@ -80,21 +66,26 @@ fn reflection_point(d: &Vec<u32>, smudge: bool) -> usize {
     ((1..d.len())
         .step_by(2)
         .find(|j| {
-            (0..(j + 1) / 2).try_fold(!smudge, |used, k| {
-                let (dk, djk) = (d[k], d[j - k]);
-                if dk == djk {
-                    return ControlFlow::Continue(used);
-                }
-                if used {
-                    return ControlFlow::Break(false);
-                }
+            let mut ok = !smudge;
 
-                let possible_smudge = dk ^ djk;
-                if possible_smudge & (possible_smudge - 1) != 0 {
-                    return ControlFlow::Break(false);
+            for k in 0..(j + 1) / 2 {
+                let (dk, djk) = (d[k], d[j - k]);
+                if dk != djk {
+                    if ok {
+                        // either no smudges allowed or already used
+                        return false;
+                    }
+
+                    let possible_smudge = dk ^ djk;
+                    if possible_smudge & (possible_smudge - 1) != 0 {
+                        return false;
+                    }
+
+                    ok = true;
                 }
-                ControlFlow::Continue(true)
-            }) == ControlFlow::Continue(true)
+            }
+
+            ok
         })
         .unwrap_or(0)
         + 1)
