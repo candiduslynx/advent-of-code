@@ -26,7 +26,6 @@ fn partition(s: &str) -> Vec<&str> {
 /// ```
 ///
 /// `memo` is a memoization helper (key = (partitions left, parts left))
-
 fn into_partitions(
     partitions: &[&str],
     parts: &[usize],
@@ -41,25 +40,35 @@ fn into_partitions(
     }
 
     let remaining = &partitions[1..];
-    let left = remaining.len();
     let single = into_single_partition(partitions[0], parts);
     single
         .iter()
         .enumerate()
         .filter(|(_, &n)| n > 0)
-        .map(|(i, &n)| {
-            let mut memorized: Option<u64> = memo.get(&(left, len - i)).map(|s| *s);
-            if memorized.is_none() {
-                let ways = into_partitions(remaining, &parts[i..], memo);
-                memo.insert((left, len - i), ways);
-                memorized = Some(ways);
-            }
-            match memorized.unwrap() {
+        .map(
+            |(i, &n)| match memorized_into_partitions(remaining, &parts[i..], memo) {
                 0 => 0,
                 val => n * val,
-            }
-        })
+            },
+        )
         .sum()
+}
+
+/// Either produce the memoized value, or calc, store & return.
+fn memorized_into_partitions(
+    partitions: &[&str],
+    parts: &[usize],
+    memo: &mut HashMap<(usize, usize), u64>,
+) -> u64 {
+    let key = (partitions.len(), parts.len());
+    match memo.get(&key) {
+        Some(val) => *val,
+        None => {
+            let res = into_partitions(partitions, parts, memo);
+            memo.insert(key, res);
+            res
+        }
+    }
 }
 
 /// Returns the vector of ways to put `L` parts into the partition.
@@ -88,11 +97,11 @@ fn into_single_partition(s: &str, parts: &[usize]) -> Vec<u64> {
             return result;
         }
         let at_least = first.unwrap() + next + 1;
-
         if at_least > len {
             // we won't be able to place anymore
             return result;
         }
+
         let mut row = vec![0u64; at_least];
         for ll in at_least..=len {
             let s = &s[..ll];
@@ -144,7 +153,7 @@ fn place_single(s: &str, len: usize) -> u64 {
     };
 }
 
-/// Ways to put only a single part at the very beginning of the partition and nothing else.
+/// Ways to put only a single part at the very beginning of the partition & nothing else.
 fn place_at_start(s: &str, len: usize) -> u64 {
     match can_place_at_start(s, len) {
         true => 1,
@@ -152,12 +161,12 @@ fn place_at_start(s: &str, len: usize) -> u64 {
     }
 }
 
-/// Check if the partition can hold only a single part at the very beginning and nothing else.
+/// Check if the partition can hold only a single part at the very beginning & nothing else.
 fn can_place_at_start(s: &str, len: usize) -> bool {
     can_place_zero(&s[len..])
 }
 
-/// Ways to put zero parts into the partition and nothing else.
+/// Ways to put 0 parts into the partition & nothing else.
 fn place_zero(s: &str) -> u64 {
     match can_place_zero(s) {
         true => 1,
@@ -165,7 +174,7 @@ fn place_zero(s: &str) -> u64 {
     }
 }
 
-/// Check if the partition can hold zero parts.
+/// Check if the partition can hold 0 parts.
 fn can_place_zero(s: &str) -> bool {
     s.as_bytes().iter().find(|&&b| b == b'#').is_none()
 }
