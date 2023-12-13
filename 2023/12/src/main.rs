@@ -3,7 +3,6 @@ use lib::time_solution::*;
 mod part1;
 mod part2;
 mod solve;
-mod solve2;
 
 fn main() {
     solve_part(part1::solve, "part 1", None);
