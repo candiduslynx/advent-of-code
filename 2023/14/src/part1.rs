@@ -1,11 +1,17 @@
 use std::fs::read;
 use std::io::BufRead;
 
+use crate::ground;
+use crate::ground::Ground;
+
 pub(crate) fn solve(path: &str) -> u64 {
-    read(path)
+    let g: Vec<Vec<Ground>> = read(path)
         .unwrap()
         .lines()
         .map(|s| s.unwrap())
         .filter(|s| !s.is_empty())
-        .count() as u64
+        .map(|s| Ground::from_str(&s))
+        .collect();
+
+    ground::ground_load(&ground::tilt_north(&g))
 }
