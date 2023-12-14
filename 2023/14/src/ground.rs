@@ -1,4 +1,17 @@
-pub(crate) fn ground_load(ground: &Vec<Vec<u8>>) -> u64 {
+use std::fs::read;
+use std::io::BufRead;
+
+pub(crate) fn scan(path: &str) -> Vec<Vec<u8>> {
+    read(path)
+        .unwrap()
+        .lines()
+        .map(|s| s.unwrap())
+        .filter(|s| !s.is_empty())
+        .map(|s| s.into_bytes())
+        .collect()
+}
+
+pub(crate) fn load(ground: &Vec<Vec<u8>>) -> u64 {
     let len = ground.len();
     ground
         .iter()
