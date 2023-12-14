@@ -13,5 +13,6 @@ pub(crate) fn solve(path: &str) -> u64 {
         .map(|s| Ground::from_str(&s))
         .collect();
 
-    ground::ground_load(&ground::tilt_north(&g))
+    let g = ground::tilt_north(&g);
+    ground::ground_load(&g)
 }

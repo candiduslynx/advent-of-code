@@ -115,3 +115,26 @@ fn transpose(v: &Vec<Vec<Ground>>) -> Vec<Vec<Ground>> {
 
     result
 }
+
+pub(crate) fn print(v: &Vec<Vec<Ground>>) {
+    let len = v.len();
+    to_str(v)
+        .chars()
+        .enumerate()
+        .flat_map(|(i, c)| {
+            if i != 0 && i % len == 0 {
+                Some('\n')
+            } else {
+                None
+            }
+            .into_iter()
+            .chain(std::iter::once(c))
+        })
+        .for_each(|c| print!("{c}",));
+}
+
+pub(crate) fn to_str(v: &Vec<Vec<Ground>>) -> String {
+    v.iter()
+        .flat_map(|row| row.iter().map(|g| g.to_char()))
+        .collect()
+}
