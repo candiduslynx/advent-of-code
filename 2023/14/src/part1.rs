@@ -5,7 +5,7 @@ use crate::ground;
 use crate::ground::Ground;
 
 pub(crate) fn solve(path: &str) -> u64 {
-    let g: Vec<Vec<Ground>> = read(path)
+    let mut g: Vec<Vec<Ground>> = read(path)
         .unwrap()
         .lines()
         .map(|s| s.unwrap())
@@ -13,6 +13,6 @@ pub(crate) fn solve(path: &str) -> u64 {
         .map(|s| Ground::from_str(&s))
         .collect();
 
-    let g = ground::tilt_north(&g);
+    ground::tilt_north(&mut g);
     ground::ground_load(&g)
 }

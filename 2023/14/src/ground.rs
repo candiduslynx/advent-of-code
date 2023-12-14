@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum Ground {
     None,
     Round,
@@ -26,111 +26,98 @@ impl Ground {
     pub(crate) fn from_str(s: &str) -> Vec<Self> {
         s.chars().map(|c| Ground::from_char(&c)).collect()
     }
-
-    fn load(v: &Vec<Self>) -> u64 {
-        let l = v.len();
-        v.iter()
-            .enumerate()
-            .map(|(i, v)| match v {
-                Ground::Round => (l - i) as u64,
-                _ => 0,
-            })
-            .sum()
-    }
 }
 
 pub(crate) fn ground_load(ground: &Vec<Vec<Ground>>) -> u64 {
-    transpose(ground).iter().map(|row| Ground::load(row)).sum()
+    let len = ground.len();
+    ground
+        .iter()
+        .enumerate()
+        .map(|(i, row)| {
+            row.iter().filter(|&&g| g == Ground::Round).count() as u64 * (len - i) as u64
+        })
+        .sum()
 }
 
-pub(crate) fn cycle(ground: &Vec<Vec<Ground>>) -> Vec<Vec<Ground>> {
-    tilt_east(&tilt_south(&tilt_west(&tilt_north(ground))))
+pub(crate) fn cycle(g: &mut Vec<Vec<Ground>>) {
+    tilt_north(g);
+    tilt_west(g);
+    tilt_south(g);
+    tilt_east(g);
 }
 
-pub(crate) fn tilt_north(ground: &Vec<Vec<Ground>>) -> Vec<Vec<Ground>> {
-    transpose(
-        &transpose(ground)
-            .iter()
-            .map(|row| tilt_to_start(row))
-            .collect(),
-    )
-}
-
-fn tilt_south(ground: &Vec<Vec<Ground>>) -> Vec<Vec<Ground>> {
-    transpose(
-        &transpose(ground)
-            .iter()
-            .map(|row| tilt_to_end(row))
-            .collect(),
-    )
-}
-
-fn tilt_west(ground: &Vec<Vec<Ground>>) -> Vec<Vec<Ground>> {
-    ground.iter().map(|row| tilt_to_start(row)).collect()
-}
-
-fn tilt_east(ground: &Vec<Vec<Ground>>) -> Vec<Vec<Ground>> {
-    ground.iter().map(|row| tilt_to_end(row)).collect()
-}
-
-fn tilt_to_end(v: &Vec<Ground>) -> Vec<Ground> {
-    let mut v = v.clone();
-    v.reverse();
-    v = tilt_to_start(&v);
-    v.reverse();
-    v
-}
-
-fn tilt_to_start(v: &Vec<Ground>) -> Vec<Ground> {
-    let mut result: Vec<Ground> = Vec::new();
-    let mut none: Option<usize> = None; // first available idx of none
-    for i in 0..v.len() {
-        result.push(v[i]);
-        match v[i] {
-            Ground::Cube => none = None,
-            Ground::None => none = none.or(Some(i)),
-            Ground::Round => {
-                match none {
+pub(crate) fn tilt_north(g: &mut Vec<Vec<Ground>>) {
+    let (rows, cols) = (g.len(), g[0].len());
+    for col in 0..cols {
+        let mut none: Option<usize> = None; // first available idx of none
+        for row in 0..rows {
+            let v = g[row][col];
+            match v {
+                Ground::Cube => none = None,
+                Ground::None => none = none.or(Some(row)),
+                Ground::Round => match none {
                     Some(val) => {
-                        // use empty space
-                        (result[val], result[i], none) = (result[i], result[val], Some(val + 1));
+                        (g[val][col], g[row][col], none) = (g[row][col], g[val][col], Some(val + 1))
                     }
                     None => {}
-                }
+                },
             }
         }
     }
-    result
 }
 
-fn transpose(v: &Vec<Vec<Ground>>) -> Vec<Vec<Ground>> {
-    if v.len() == 0 {
-        return v.to_vec();
-    }
-
-    let mut result: Vec<Vec<Ground>> = Vec::with_capacity(v[0].len());
-    for i in 0..v[0].len() {
-        result.push(v.iter().map(|v| v[i]).collect());
-    }
-
-    result
-}
-
-pub(crate) fn print(v: &Vec<Vec<Ground>>) {
-    let len = v.len();
-    to_str(v)
-        .chars()
-        .enumerate()
-        .flat_map(|(i, c)| {
-            if i != 0 && i % len == 0 {
-                Some('\n')
-            } else {
-                None
+fn tilt_south(g: &mut Vec<Vec<Ground>>) {
+    let (rows, cols) = (g.len(), g[0].len());
+    for col in 0..cols {
+        let mut none: Option<usize> = None; // first available idx of none
+        for row in (0..rows).rev() {
+            let v = g[row][col];
+            match v {
+                Ground::Cube => none = None,
+                Ground::None => none = none.or(Some(row)),
+                Ground::Round => match none {
+                    Some(val) => {
+                        (g[val][col], g[row][col], none) = (g[row][col], g[val][col], Some(val - 1))
+                    }
+                    None => {}
+                },
             }
-            .into_iter()
-            .chain(std::iter::once(c))
-        })
-        .for_each(|c| print!("{c}",));
+        }
+    }
+}
+
+fn tilt_west(g: &mut Vec<Vec<Ground>>) {
+    g.iter_mut().for_each(|row| {
+        let mut none: Option<usize> = None; // first available idx of none
+        for col in 0..row.len() {
+            let v = row[col];
+            match v {
+                Ground::Cube => none = None,
+                Ground::None => none = none.or(Some(col)),
+                Ground::Round => match none {
+                    Some(val) => (row[val], row[col], none) = (row[col], row[val], Some(val + 1)),
+                    None => {}
+                },
+            }
+        }
+    });
+}
+
+fn tilt_east(g: &mut Vec<Vec<Ground>>) {
+    g.iter_mut().for_each(|row| {
+        let mut none: Option<usize> = None; // first available idx of none
+        for col in (0..row.len()).rev() {
+            let v = row[col];
+            match v {
+                Ground::Cube => none = None,
+                Ground::None => none = none.or(Some(col)),
+                Ground::Round => match none {
+                    Some(val) => (row[val], row[col], none) = (row[col], row[val], Some(val - 1)),
+                    None => {}
+                },
+            }
+        }
+    });
 }
 
 pub(crate) fn to_str(v: &Vec<Vec<Ground>>) -> String {

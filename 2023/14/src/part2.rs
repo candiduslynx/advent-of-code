@@ -20,7 +20,7 @@ pub(crate) fn solve(path: &str) -> u64 {
 
     const CYCLES: u64 = 1000000000;
     for i in 1..=CYCLES {
-        g = ground::cycle(&g);
+        ground::cycle(&mut g);
         let s = ground::to_str(&g);
         let l = ground::ground_load(&g);
         match memo.get(&s) {
