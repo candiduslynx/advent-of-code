@@ -27,6 +27,6 @@ pub(crate) fn solve(path: &str) -> u64 {
         }
     }
 
-    println!("we had to cycle through all of the variants!");
+    println!("we had to cycle through all {CYCLES} of the variants!");
     *load.last().unwrap()
 }
