@@ -5,18 +5,18 @@ use crate::ground;
 pub(crate) fn solve(path: &str) -> u64 {
     let mut g = ground::scan(path);
 
-    let mut memo: HashMap<String, u64> = HashMap::new(); // key = stringified field, val = cycles after we have this
-    memo.insert(ground::to_str(&g), 0);
+    let mut memo: HashMap<Vec<u128>, u64> = HashMap::new(); // key = stringified field, val = cycles after we have this
+    memo.insert(ground::to_u128_vec(&g), 0);
     let mut load: Vec<u64> = vec![ground::load(&g)];
 
     const CYCLES: u64 = 1000000000;
     for i in 1..=CYCLES {
         ground::cycle(&mut g);
-        let s = ground::to_str(&g);
+        let h = ground::to_u128_vec(&g);
         let l = ground::load(&g);
-        match memo.get(&s) {
+        match memo.get(&h) {
             None => {
-                memo.insert(s, i);
+                memo.insert(h, i);
                 load.push(l)
             }
             Some(val) => {
