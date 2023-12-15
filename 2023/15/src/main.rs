@@ -1,6 +1,7 @@
 use lib::time_solution::*;
 
 mod hash;
+mod lens;
 mod part1;
 mod part2;
 
