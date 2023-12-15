@@ -29,80 +29,71 @@ pub(crate) fn cycle(g: &mut Vec<Vec<u8>>) {
 
 pub(crate) fn tilt_north(g: &mut Vec<Vec<u8>>) {
     let (rows, cols) = (g.len(), g[0].len());
-    for col in 0..cols {
-        let mut none: Option<usize> = None; // first available idx of none
-        for row in 0..rows {
-            match g[row][col] {
-                b'#' => none = None,
-                b'.' => none = none.or(Some(row)),
-                b'O' => match none {
-                    Some(val) => {
-                        (g[val][col], g[row][col], none) = (g[row][col], g[val][col], Some(val + 1))
-                    }
-                    _ => {}
-                },
-                _b => panic!("bad byte {_b}"),
-            }
-        }
-    }
+    (0..cols).for_each(|col| {
+        (0..rows).fold(None, |none, row| tilt(g, row, |x| (x, col), none, false));
+    });
 }
 
 fn tilt_south(g: &mut Vec<Vec<u8>>) {
     let (rows, cols) = (g.len(), g[0].len());
-    for col in 0..cols {
-        let mut none: Option<usize> = None; // first available idx of none
-        for row in (0..rows).rev() {
-            match g[row][col] {
-                b'#' => none = None,
-                b'.' => none = none.or(Some(row)),
-                b'O' => match none {
-                    Some(val) => {
-                        (g[val][col], g[row][col], none) = (g[row][col], g[val][col], Some(val - 1))
-                    }
-                    _ => {}
-                },
-                _b => panic!("bad byte {_b}"),
-            }
-        }
-    }
+    (0..cols).for_each(|col| {
+        (0..rows)
+            .rev()
+            .fold(None, |none, row| tilt(g, row, |x| (x, col), none, true));
+    });
 }
 
 fn tilt_west(g: &mut Vec<Vec<u8>>) {
-    g.iter_mut().for_each(|row| {
-        let mut none: Option<usize> = None; // first available idx of none
-        for col in 0..row.len() {
-            match row[col] {
-                b'#' => none = None,
-                b'.' => none = none.or(Some(col)),
-                b'O' => match none {
-                    Some(val) => (row[val], row[col], none) = (row[col], row[val], Some(val + 1)),
-                    _ => {}
-                },
-                _b => panic!("bad byte {_b}"),
-            }
-        }
+    let (rows, cols) = (g.len(), g[0].len());
+    (0..rows).for_each(|row| {
+        (0..cols).fold(None, |none, col| tilt(g, col, |y| (row, y), none, false));
     });
 }
 
 fn tilt_east(g: &mut Vec<Vec<u8>>) {
-    g.iter_mut().for_each(|row| {
-        let mut none: Option<usize> = None; // first available idx of none
-        for col in (0..row.len()).rev() {
-            match row[col] {
-                b'#' => none = None,
-                b'.' => none = none.or(Some(col)),
-                b'O' => match none {
-                    Some(val) => (row[val], row[col], none) = (row[col], row[val], Some(val - 1)),
-                    _ => {}
-                },
-                _b => panic!("bad byte {_b}"),
-            }
-        }
+    let (rows, cols) = (g.len(), g[0].len());
+    (0..rows).for_each(|row| {
+        (0..cols)
+            .rev()
+            .fold(None, |none, col| tilt(g, col, |y| (row, y), none, true));
     });
 }
 
-pub(crate) fn to_str(v: &Vec<Vec<u8>>) -> String {
+fn tilt(
+    g: &mut Vec<Vec<u8>>,
+    at: usize,
+    coord: impl Fn(usize) -> (usize, usize),
+    none: Option<usize>,
+    forward: bool,
+) -> Option<usize> {
+    let (x, y) = coord(at);
+    match g[x][y] {
+        b'#' => return None,
+        b'.' => return none.or(Some(at)),
+        b'O' => match none {
+            Some(to) => {
+                let (to_x, to_y) = coord(to);
+                (g[x][y], g[to_x][to_y]) = (g[to_x][to_y], g[x][y]);
+                return if forward { Some(to - 1) } else { Some(to + 1) };
+            }
+            _ => none,
+        },
+        _b => panic!("bad byte {_b}"),
+    }
+}
+
+/// hash the state to u128
+/// each row is encoded as u128, then we do a xor
+pub(crate) fn to_u128(v: &Vec<Vec<u8>>) -> u128 {
     v.iter()
-        .map(|row| std::str::from_utf8(row.as_slice()).unwrap())
-        .collect()
+        .map(|row| {
+            row.iter().fold(0u128, |mut s, &c| {
+                s <<= 1;
+                if c == b'O' {
+                    s += 1;
+                }
+                s
+            })
+        })
+        .fold(0u128, |s, c| s.rotate_left(1) ^ c)
 }
