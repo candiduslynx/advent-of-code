@@ -1,32 +1,33 @@
-use std::collections::HashMap;
-
 use crate::ground;
 
 pub(crate) fn solve(path: &str) -> u64 {
     let mut g = ground::scan(path);
 
-    let mut memo: HashMap<Vec<u128>, u64> = HashMap::new(); // key = stringified field, val = cycles after we have this
-    memo.insert(ground::to_u128_vec(&g), 0);
-    let mut load: Vec<u64> = vec![ground::load(&g)];
+    let mut load: Vec<(Vec<u128>, u64)> = vec![(ground::to_u128_vec(&g), ground::load(&g))];
 
-    const CYCLES: u64 = 1000000000;
+    const CYCLES: usize = 1000000000;
     for i in 1..=CYCLES {
         ground::cycle(&mut g);
         let h = ground::to_u128_vec(&g);
         let l = ground::load(&g);
-        match memo.get(&h) {
+        match load.iter().enumerate().find_map(|(i, (v, l_saved))| {
+            if *l_saved == l && h.eq(v) {
+                Some(i)
+            } else {
+                None
+            }
+        }) {
             None => {
-                memo.insert(h, i);
-                load.push(l)
+                load.push((h, l));
             }
             Some(val) => {
                 let extra = (CYCLES - i) % (i - val);
                 // the result is at val + extra
-                return load[(val + extra) as usize];
+                return load[(val + extra) as usize].1;
             }
         }
     }
 
     println!("we had to cycle through all {CYCLES} of the variants!");
-    *load.last().unwrap()
+    load.last().unwrap().1
 }
