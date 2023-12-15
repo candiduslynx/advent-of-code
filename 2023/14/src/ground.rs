@@ -100,17 +100,3 @@ fn tilt_east(g: &mut Vec<Vec<u8>>) {
         }
     });
 }
-
-pub(crate) fn to_u128_vec(v: &Vec<Vec<u8>>) -> Vec<u128> {
-    v.iter()
-        .map(|row| {
-            row.iter().fold(0u128, |mut s, &c| {
-                s <<= 1;
-                if c == b'O' {
-                    s += 1;
-                }
-                s
-            })
-        })
-        .collect()
-}
