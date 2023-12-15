@@ -1,13 +1,11 @@
+use crate::lens::LensHasher;
 use std::fs::read;
 use std::io::BufRead;
 
-use crate::hash;
-
 pub(crate) fn solve(path: &str) -> u64 {
-    type KeyValue = (String, usize);
-    let mut boxes: Vec<Vec<Option<KeyValue>>> = std::iter::repeat(vec![])
+    let mut boxes = std::iter::repeat(vec![])
         .take(256)
-        .collect::<Vec<Vec<Option<KeyValue>>>>();
+        .collect::<Vec<Vec<Option<(String, u8)>>>>();
 
     read(path)
         .unwrap()
@@ -18,7 +16,7 @@ pub(crate) fn solve(path: &str) -> u64 {
             s.split(",").for_each(|part| {
                 if part.ends_with("-") {
                     let key = part.strip_suffix("-").unwrap();
-                    match boxes[hash::hash(key)]
+                    match boxes[LensHasher::calc(key) as usize]
                         .iter_mut()
                         .find(|s| s.as_ref().is_some_and(|(s, _)| s == key))
                     {
@@ -29,12 +27,13 @@ pub(crate) fn solve(path: &str) -> u64 {
                     let parts: Vec<&str> = part.split("=").collect();
                     assert_eq!(parts.len(), 2);
                     let key = parts[0];
-                    let val = parts[1].parse::<usize>().unwrap();
-                    match boxes[hash::hash(key)]
+                    let h = usize::try_from(LensHasher::calc(key)).unwrap();
+                    let val = parts[1].parse::<u8>().unwrap();
+                    match boxes[h]
                         .iter_mut()
                         .find(|s| s.as_ref().is_some_and(|(s, _)| s == key))
                     {
-                        None => boxes[hash::hash(key)].push(Some((String::from(key), val))),
+                        None => boxes[h].push(Some((String::from(key), val))),
                         Some(Some(k)) => k.1 = val,
                         _ => {}
                     }
@@ -51,7 +50,7 @@ pub(crate) fn solve(path: &str) -> u64 {
             v.iter()
                 .filter(|s| s.is_some())
                 .enumerate()
-                .map(|(j, kv)| (k * (j + 1) * kv.as_ref().unwrap().1) as u64)
+                .map(|(j, kv)| (k * (j + 1) * usize::from(kv.as_ref().unwrap().1)) as u64)
                 .sum::<u64>()
         })
         .sum()

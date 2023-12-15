@@ -1,32 +1,22 @@
 use std::hash::Hasher;
 
-pub(crate) fn hash(s: &str) -> usize {
-    s.as_bytes().iter().fold(0usize, |s, &b| {
-        const U8_MASK: usize = 255;
-        let s = (s + b as usize) & U8_MASK;
-        let p = (s << 4) + s;
-        let n = p & U8_MASK;
-        n
-    })
-}
-
-pub(crate) struct ShiftSumHasher {
+pub(crate) struct LensHasher {
     state: u64,
 }
 
-impl ShiftSumHasher {
+impl LensHasher {
     pub(crate) fn new() -> Self {
-        ShiftSumHasher { state: 0u64 }
+        LensHasher { state: 0u64 }
     }
 
-    pub(crate) fn calc(bytes: &[u8]) -> u64 {
-        let mut s = ShiftSumHasher::new();
-        s.write(bytes);
+    pub(crate) fn calc(data: &str) -> u64 {
+        let mut s = LensHasher::new();
+        s.write(data.as_bytes());
         s.finish()
     }
 }
 
-impl std::hash::Hasher for ShiftSumHasher {
+impl Hasher for LensHasher {
     fn finish(&self) -> u64 {
         self.state
     }
