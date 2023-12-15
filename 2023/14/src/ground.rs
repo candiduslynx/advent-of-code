@@ -59,16 +59,13 @@ fn tilt_east(g: &mut Vec<Vec<u8>>) {
     });
 }
 
-fn tilt<T>(
+fn tilt(
     g: &mut Vec<Vec<u8>>,
     at: usize,
-    coord: T,
+    coord: impl Fn(usize) -> (usize, usize),
     none: Option<usize>,
     forward: bool,
-) -> Option<usize>
-where
-    T: Fn(usize) -> (usize, usize),
-{
+) -> Option<usize> {
     let (x, y) = coord(at);
     match g[x][y] {
         b'#' => return None,
