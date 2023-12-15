@@ -101,7 +101,9 @@ fn tilt_east(g: &mut Vec<Vec<u8>>) {
     });
 }
 
-pub(crate) fn to_u128_vec(v: &Vec<Vec<u8>>) -> Vec<u128> {
+/// hash the state to u128
+/// each row is encoded as u128, then we do a xor
+pub(crate) fn to_u128(v: &Vec<Vec<u8>>) -> u128 {
     v.iter()
         .map(|row| {
             row.iter().fold(0u128, |mut s, &c| {
@@ -112,5 +114,5 @@ pub(crate) fn to_u128_vec(v: &Vec<Vec<u8>>) -> Vec<u128> {
                 s
             })
         })
-        .collect()
+        .fold(0u128, |s, c| s.rotate_left(1) ^ c)
 }
