@@ -3,6 +3,8 @@ use std::io::BufRead;
 
 use lib::point::Point;
 
+use crate::contraption;
+
 #[derive(Clone, Copy)]
 pub(crate) enum Dir {
     L = 1,
@@ -11,6 +13,7 @@ pub(crate) enum Dir {
     D = 8,
 }
 
+#[derive(Clone, Copy)]
 pub(crate) struct Node {
     pub c: u8,       // char at position
     pub entered: u8, // entered & Dir => we saw entering from that dir
@@ -119,4 +122,17 @@ pub(crate) fn energy(c: &Contraption) -> u64 {
     c.iter()
         .map(|row| row.iter().filter(|n| n.energized()).count() as u64)
         .sum()
+}
+
+pub(crate) fn energy_from(init: &Contraption, from: PointDir) -> u64 {
+    let (rows, cols) = (init.len(), init[0].len());
+    let mut c = init.to_vec();
+    let mut next: Vec<PointDir> = vec![from];
+    while next.len() > 0 {
+        next = contraption::next(&mut c, &next)
+            .into_iter()
+            .filter(|(p, _)| p.is_valid(rows, cols))
+            .collect();
+    }
+    energy(&c)
 }
