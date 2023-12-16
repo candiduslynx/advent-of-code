@@ -5,6 +5,14 @@ pub struct Point {
 }
 
 impl Point {
+    pub fn ux(&self) -> usize {
+        self.x as usize
+    }
+
+    pub fn uy(&self) -> usize {
+        self.y as usize
+    }
+
     pub fn dst_flat(&self, other: &Self) -> isize {
         (self.x - other.x).abs() + (self.y - other.y).abs()
     }
