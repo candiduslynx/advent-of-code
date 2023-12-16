@@ -3,8 +3,6 @@ use std::io::BufRead;
 
 use lib::point::Point;
 
-use crate::contraption;
-
 #[derive(Clone, Copy)]
 pub(crate) enum Dir {
     L = 1,
@@ -112,15 +110,6 @@ pub(crate) fn scan(path: &str) -> Contraption {
         .collect()
 }
 
-pub(crate) fn next(c: &mut Contraption, nodes: &Vec<PointDir>) -> Vec<PointDir> {
-    nodes
-        .iter()
-        .filter_map(|n| c[n.0.ux()][n.0.uy()].next(n))
-        .flat_map(|x| [x.0, x.1])
-        .filter_map(|x| x)
-        .collect()
-}
-
 pub(crate) fn energy(c: &Contraption) -> u64 {
     c.iter()
         .map(|row| row.iter().filter(|n| n.energized()).count() as u64)
@@ -132,8 +121,11 @@ pub(crate) fn energy_from(init: &Contraption, from: PointDir) -> u64 {
     let mut c = init.to_vec();
     let mut next: Vec<PointDir> = vec![from];
     while next.len() > 0 {
-        next = contraption::next(&mut c, &next)
-            .into_iter()
+        next = next
+            .iter()
+            .filter_map(|n| c[n.0.ux()][n.0.uy()].next(n))
+            .flat_map(|x| [x.0, x.1])
+            .filter_map(|x| x)
             .filter(|(p, _)| p.is_valid(rows, cols))
             .collect();
     }
