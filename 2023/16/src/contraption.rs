@@ -84,12 +84,15 @@ impl Node {
     }
 
     fn passthrough(coord: &Point, from: Dir) -> PointDir {
-        match from {
-            Dir::L => (coord.right(), from),
-            Dir::R => (coord.left(), from),
-            Dir::U => (coord.below(), from),
-            Dir::D => (coord.above(), from),
-        }
+        (
+            match from {
+                Dir::L => coord.right(),
+                Dir::R => coord.left(),
+                Dir::U => coord.below(),
+                Dir::D => coord.above(),
+            },
+            from,
+        )
     }
 
     fn energized(&self) -> bool {
