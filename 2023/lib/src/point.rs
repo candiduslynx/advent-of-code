@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Ord, PartialOrd)]
 pub struct Point {
     pub x: isize,
     pub y: isize,
@@ -13,8 +13,18 @@ impl Point {
         self.y as usize
     }
 
-    pub fn dst_flat(&self, other: &Self) -> isize {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
+    pub fn from_coords(x: usize, y: usize) -> Self {
+        Self {
+            x: x as isize,
+            y: y as isize,
+        }
+    }
+    pub fn coords(&self) -> (usize, usize) {
+        (self.ux(), self.uy())
+    }
+
+    pub fn dst_flat(&self, other: &Self) -> usize {
+        (self.x - other.x).abs() as usize + (self.y - other.y).abs() as usize
     }
 
     pub fn neighbors(&self) -> [Self; 8] {
@@ -158,7 +168,7 @@ impl Point {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug, Hash)]
 pub enum Dir {
     L = 1,
     R = 2,
