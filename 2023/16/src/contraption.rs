@@ -1,15 +1,7 @@
 use std::fs::read;
 use std::io::BufRead;
 
-use lib::point::Point;
-
-#[derive(Clone, Copy)]
-pub(crate) enum Dir {
-    L = 1,
-    R = 2,
-    U = 4,
-    D = 8,
-}
+use lib::point::{Dir, Point};
 
 #[derive(Clone, Copy)]
 pub(crate) struct Node {

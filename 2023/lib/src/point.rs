@@ -157,3 +157,11 @@ impl Point {
             && self.y < exclusive_max_y.try_into().unwrap()
     }
 }
+
+#[derive(Clone, Copy)]
+pub enum Dir {
+    L = 1,
+    R = 2,
+    U = 4,
+    D = 8,
+}
