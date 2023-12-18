@@ -20,10 +20,10 @@ pub(crate) fn scan(path: &str) -> Vec<Vec<u8>> {
 
 #[derive(Copy, Clone, PartialEq, Eq, Ord, Debug, Hash)]
 pub(crate) struct State {
-    at: Point,
-    dir: Dir,    // where we're face when we entered the location
-    took: usize, // how many steps in direction specified were taken already
-    to: Point,
+    pub(crate) at: Point,
+    pub(crate) dir: Dir,    // where we're face when we entered the location
+    pub(crate) took: usize, // how many steps in direction specified were taken already
+    pub(crate) to: Point,
 }
 
 impl PartialOrd for State {
@@ -38,51 +38,6 @@ impl PartialOrd for State {
 }
 
 impl State {
-    fn validate(&self, limits: &Limits) -> Option<Self> {
-        if !self.at.is_valid(limits.exclusive_x, limits.exclusive_y) {
-            return None;
-        }
-        if self.took <= limits.steps {
-            Some(*self)
-        } else {
-            None
-        }
-    }
-
-    // after each step we have 3 possibilities: forward, left or right
-    // we also need to take the validity into account
-    fn next_moves(&self, limits: &Limits) -> [Option<State>; 3] {
-        let (l, r) = (self.dir.turn_counterclockwise(), self.dir.turn_clockwise());
-        [
-            State {
-                // forward
-                at: self.at.neighbour(&self.dir),
-                took: self.took + 1,
-                ..*self
-            },
-            State {
-                // left
-                at: self.at.neighbour(&l),
-                dir: l,
-                took: 1,
-                ..*self
-            },
-            State {
-                // right
-                at: self.at.neighbour(&r),
-                dir: r,
-                took: 1,
-                ..*self
-            },
-        ]
-        .map(|x| x.validate(limits))
-    }
-
-    fn cost(&self, city: &Vec<Vec<u8>>) -> u8 {
-        let (x, y) = self.at.coords();
-        city[x][y]
-    }
-
     fn h(&self) -> u64 {
         self.at.dst_flat(&self.to) as u64
     }
@@ -91,15 +46,18 @@ impl State {
 pub(crate) struct Limits {
     pub(crate) exclusive_x: usize, // <, not <=
     pub(crate) exclusive_y: usize,
-    pub(crate) steps: usize,
 }
 
 // impl a_star, but the key is both point & dir
-pub(crate) fn a_star(city: &Vec<Vec<u8>>, from: Point, to: Point, step_limit: usize) -> u64 {
+pub(crate) fn a_star(
+    city: &Vec<Vec<u8>>,
+    from: Point,
+    to: Point,
+    next: impl Fn(&Vec<Vec<u8>>, &State, &Limits) -> [Option<(State, u64)>; 3],
+) -> u64 {
     let limits = &Limits {
         exclusive_x: city.len(),
         exclusive_y: city[0].len(),
-        steps: step_limit,
     };
 
     let start = State {
@@ -129,11 +87,8 @@ pub(crate) fn a_star(city: &Vec<Vec<u8>>, from: Point, to: Point, step_limit: us
 
         let &n_score = g_score.get(&node).unwrap();
 
-        for s in node.next_moves(limits).into_iter().filter_map(|s| s) {
-            if s.at == from {
-                continue;
-            }
-            let t = n_score + s.cost(city) as u64;
+        for (s, extra) in next(city, &node, limits).into_iter().filter_map(|s| s) {
+            let t = n_score + extra;
             match g_score.entry(s) {
                 Entry::Vacant(e) => {
                     e.insert(t);
@@ -151,4 +106,17 @@ pub(crate) fn a_star(city: &Vec<Vec<u8>>, from: Point, to: Point, step_limit: us
         }
     }
     res
+}
+
+pub(crate) fn solve(
+    path: &str,
+    next: impl Fn(&Vec<Vec<u8>>, &State, &Limits) -> [Option<(State, u64)>; 3],
+) -> u64 {
+    let c = scan(path);
+    a_star(
+        &c,
+        Point::from_coords(0, 0),
+        Point::from_coords(c.len() - 1, c[0].len() - 1),
+        next,
+    )
 }
