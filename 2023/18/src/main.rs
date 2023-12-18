@@ -1,5 +1,6 @@
 use lib::time_solution::*;
 
+mod dig;
 mod part1;
 mod part2;
 
