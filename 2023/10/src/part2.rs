@@ -26,8 +26,8 @@ pub(crate) fn solve(path: &str) -> u32 {
                 None
             } else {
                 Some(Point {
-                    x: x as isize,
-                    y: y.unwrap() as isize,
+                    x: x as i64,
+                    y: y.unwrap() as i64,
                 })
             }
         })
@@ -52,8 +52,8 @@ pub(crate) fn solve(path: &str) -> u32 {
             let mut h_start = &'?';
             for y in 0..row.len() {
                 if cycle.contains(&Point {
-                    x: x as isize,
-                    y: y as isize,
+                    x: x as i64,
+                    y: y as i64,
                 }) {
                     match lines[x][y] {
                         '|' => inside = !inside,

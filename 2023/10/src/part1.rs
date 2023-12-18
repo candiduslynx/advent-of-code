@@ -17,17 +17,16 @@ pub(crate) fn solve(path: &str) -> usize {
         .iter()
         .enumerate()
         .find_map(|(x, row)| {
-            let y = row
+            match row
                 .iter()
                 .enumerate()
-                .find_map(|(y, c)| if 'S'.eq(c) { Some(y) } else { None });
-            if y.is_none() {
-                None
-            } else {
-                Some(Point {
-                    x: x as isize,
-                    y: y.unwrap() as isize,
-                })
+                .find_map(|(y, c)| if 'S'.eq(c) { Some(y) } else { None })
+            {
+                None => None,
+                Some(y) => Some(Point {
+                    x: x as i64,
+                    y: y as i64,
+                }),
             }
         })
         .unwrap();

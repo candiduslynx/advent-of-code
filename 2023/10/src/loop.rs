@@ -10,11 +10,12 @@ pub(crate) fn get_loop(
     let mut pos = start;
     let mut pipe = treat;
     let mut prev: Option<Point> = None;
-    let (max_x, max_y) = (lines.len(), lines[0].len());
+    let mut next = start.left(); // just not start
+    let (max_x, max_y) = (lines.len() as u64, lines[0].len() as u64);
     let mut result: HashSet<Point> = HashSet::new();
 
-    while prev != Some(start) {
-        let next = match prev {
+    while next != start {
+        next = match prev {
             Some(prev) => {
                 match pipe {
                     '|' => Point {
@@ -55,7 +56,7 @@ pub(crate) fn get_loop(
             return None;
         }
 
-        if pos != start {
+        if next != start {
             pipe = &lines[next.x as usize][next.y as usize];
         } else {
             pipe = treat
