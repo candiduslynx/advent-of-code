@@ -106,7 +106,7 @@ pub(crate) fn energy(c: &Contraption) -> u64 {
 }
 
 pub(crate) fn energy_from(init: &Contraption, from: PointDir) -> u64 {
-    let (rows, cols) = (init.len(), init[0].len());
+    let (rows, cols) = (init.len() as u64, init[0].len() as u64);
     let mut c = init.to_vec();
     let mut next: Vec<PointDir> = vec![from];
     while next.len() > 0 {

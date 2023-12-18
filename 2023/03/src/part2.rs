@@ -16,7 +16,7 @@ fn get_gear_ratios(lines: Vec<String>) -> Vec<u64> {
     let mut res: HashMap<Point, (u64, u64)> = HashMap::new();
 
     for i in 0..lines.len() {
-        let x = i as isize;
+        let x = i as i64;
         let line = lines[i].as_bytes();
 
         let mut num: Option<u64> = None;
@@ -27,7 +27,7 @@ fn get_gear_ratios(lines: Vec<String>) -> Vec<u64> {
 
             if c.is_ascii_digit() {
                 num = Some(num.unwrap_or_default() * 10 + ((c - b'0') as u64));
-                Point { x, y: j as isize }
+                Point { x, y: j as i64 }
                     .neighbors()
                     .iter()
                     .filter(|p| gears.contains(p))
@@ -64,7 +64,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
     let mut res: HashSet<Point> = HashSet::new();
 
     for i in 0..lines.len() {
-        let x = i as isize;
+        let x = i as i64;
         let line = lines[i].as_bytes();
         for j in 0..line.len() {
             let c = line[j];
@@ -82,7 +82,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
             if is_digit_pos(
                 Point {
                     x: x - 1,
-                    y: j as isize,
+                    y: j as i64,
                 },
                 lines,
             ) {
@@ -91,7 +91,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
                 if is_digit_pos(
                     Point {
                         x: x - 1,
-                        y: j as isize - 1,
+                        y: j as i64 - 1,
                     },
                     lines,
                 ) {
@@ -100,7 +100,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
                 if is_digit_pos(
                     Point {
                         x: x - 1,
-                        y: j as isize + 1,
+                        y: j as i64 + 1,
                     },
                     lines,
                 ) {
@@ -113,7 +113,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
                 && is_digit_pos(
                     Point {
                         x: x + 1,
-                        y: j as isize,
+                        y: j as i64,
                     },
                     lines,
                 )
@@ -123,7 +123,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
                 if is_digit_pos(
                     Point {
                         x: x + 1,
-                        y: j as isize - 1,
+                        y: j as i64 - 1,
                     },
                     lines,
                 ) {
@@ -132,7 +132,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
                 if is_digit_pos(
                     Point {
                         x: x + 1,
-                        y: j as isize + 1,
+                        y: j as i64 + 1,
                     },
                     lines,
                 ) {
@@ -142,27 +142,15 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
 
             // left & right neighbors can only be separate numbers
             let mut lr = 0u8;
-            if is_digit_pos(
-                Point {
-                    x,
-                    y: j as isize - 1,
-                },
-                lines,
-            ) {
+            if is_digit_pos(Point { x, y: j as i64 - 1 }, lines) {
                 lr += 1;
             }
-            if is_digit_pos(
-                Point {
-                    x,
-                    y: j as isize + 1,
-                },
-                lines,
-            ) {
+            if is_digit_pos(Point { x, y: j as i64 + 1 }, lines) {
                 lr += 1;
             }
 
             if above + below + lr == 2 {
-                res.insert(Point { x, y: j as isize });
+                res.insert(Point { x, y: j as i64 });
             }
         }
     }
@@ -170,7 +158,7 @@ fn get_gears(lines: &Vec<String>) -> HashSet<Point> {
 }
 
 fn is_digit_pos(p: Point, lines: &Vec<String>) -> bool {
-    if !p.is_valid(lines.len(), lines[0].as_bytes().len()) {
+    if !p.is_valid(lines.len() as u64, lines[0].as_bytes().len() as u64) {
         return false;
     }
     lines[p.x as usize].as_bytes()[p.y as usize].is_ascii_digit()

@@ -6,7 +6,7 @@ use crate::contraption;
 
 pub(crate) fn solve(path: &str) -> u64 {
     let c = contraption::scan(path);
-    let (rows, cols) = (c.len() as isize, c[0].len() as isize);
+    let (rows, cols) = (c.len() as i64, c[0].len() as i64);
 
     (0..rows)
         .flat_map(|x| {

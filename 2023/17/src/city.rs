@@ -31,8 +31,8 @@ impl State {
 }
 
 pub(crate) struct Limits {
-    pub(crate) exclusive_x: usize,
-    pub(crate) exclusive_y: usize,
+    pub(crate) exclusive_x: u64,
+    pub(crate) exclusive_y: u64,
 }
 
 // impl a_star, but the key is both point & dir
@@ -43,8 +43,8 @@ pub(crate) fn a_star(
     next: impl Fn(&Vec<Vec<u8>>, &State, &Limits) -> Vec<(State, u64)>,
 ) -> u64 {
     let limits = &Limits {
-        exclusive_x: city.len(),
-        exclusive_y: city[0].len(),
+        exclusive_x: city.len() as u64,
+        exclusive_y: city[0].len() as u64,
     };
 
     let start = [

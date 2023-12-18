@@ -71,7 +71,7 @@ impl Polygon {
 
 pub(crate) struct Step {
     dir: Dir,
-    len: isize,
+    len: i64,
 }
 
 impl Step {
@@ -88,7 +88,7 @@ impl Step {
             _ => Err(ParseError),
         }?;
 
-        let len = isize::from_str_radix(&p[..5], 16).map_err(|_| ParseError)?;
+        let len = i64::from_str_radix(&p[..5], 16).map_err(|_| ParseError)?;
         Ok(Self { dir, len })
     }
 }
@@ -112,7 +112,7 @@ impl FromStr for Step {
             _ => Err(ParseError),
         }?;
 
-        let len = parts[1].parse::<isize>().map_err(|_| ParseError)?;
+        let len = parts[1].parse::<i64>().map_err(|_| ParseError)?;
 
         Ok(Self { dir, len })
     }
