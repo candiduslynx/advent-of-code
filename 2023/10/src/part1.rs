@@ -1,6 +1,7 @@
-use lib::point::Point;
 use std::fs::read;
 use std::io::BufRead;
+
+use lib::point::Point;
 
 use crate::r#loop::get_loop;
 
@@ -17,17 +18,13 @@ pub(crate) fn solve(path: &str) -> usize {
         .iter()
         .enumerate()
         .find_map(|(x, row)| {
-            match row
-                .iter()
-                .enumerate()
-                .find_map(|(y, c)| if 'S'.eq(c) { Some(y) } else { None })
-            {
-                None => None,
-                Some(y) => Some(Point {
+            row.iter().enumerate().find_map(|(y, c)| match c {
+                'S' => Some(Point {
                     x: x as i64,
                     y: y as i64,
                 }),
-            }
+                _ => None,
+            })
         })
         .unwrap();
 
