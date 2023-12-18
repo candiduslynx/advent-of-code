@@ -1,7 +1,15 @@
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Ord, PartialOrd)]
+use std::fmt;
+
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Ord, PartialOrd)]
 pub struct Point {
     pub x: isize,
     pub y: isize,
+}
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("").field(&self.x).field(&self.y).finish()
+    }
 }
 
 impl Point {
@@ -68,6 +76,15 @@ impl Point {
         Point {
             x: self.x - 1,
             y: self.y,
+        }
+    }
+
+    pub fn neighbour(&self, dir: &Dir) -> Self {
+        match dir {
+            Dir::L => self.left(),
+            Dir::R => self.right(),
+            Dir::D => self.below(),
+            Dir::U => self.above(),
         }
     }
 
@@ -174,4 +191,23 @@ pub enum Dir {
     R = 2,
     U = 4,
     D = 8,
+}
+
+impl Dir {
+    pub fn turn_clockwise(&self) -> Self {
+        match self {
+            Dir::U => Dir::R,
+            Dir::R => Dir::D,
+            Dir::D => Dir::L,
+            Dir::L => Dir::U,
+        }
+    }
+    pub fn turn_counterclockwise(&self) -> Self {
+        match self {
+            Dir::U => Dir::L,
+            Dir::L => Dir::D,
+            Dir::D => Dir::R,
+            Dir::R => Dir::U,
+        }
+    }
 }
