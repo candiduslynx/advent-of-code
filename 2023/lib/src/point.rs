@@ -2,8 +2,8 @@ use std::fmt;
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Ord, PartialOrd)]
 pub struct Point {
-    pub x: isize,
-    pub y: isize,
+    pub x: i64,
+    pub y: i64,
 }
 
 impl fmt::Debug for Point {
@@ -23,16 +23,16 @@ impl Point {
 
     pub fn from_coords(x: usize, y: usize) -> Self {
         Self {
-            x: x as isize,
-            y: y as isize,
+            x: x as i64,
+            y: y as i64,
         }
     }
     pub fn coords(&self) -> (usize, usize) {
         (self.ux(), self.uy())
     }
 
-    pub fn dst_flat(&self, other: &Self) -> usize {
-        (self.x - other.x).abs() as usize + (self.y - other.y).abs() as usize
+    pub fn dst_flat(&self, other: &Self) -> u64 {
+        self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
     }
 
     pub fn neighbors(&self) -> [Self; 8] {
@@ -177,11 +177,11 @@ impl Point {
         ]
     }
 
-    pub fn is_valid(&self, exclusive_max_x: usize, exclusive_max_y: usize) -> bool {
+    pub fn is_valid(&self, exclusive_max_x: u64, exclusive_max_y: u64) -> bool {
         self.x >= 0
-            && self.x < exclusive_max_x.try_into().unwrap()
+            && (self.x as u64) < exclusive_max_x
             && self.y >= 0
-            && self.y < exclusive_max_y.try_into().unwrap()
+            && (self.y as u64) < exclusive_max_y
     }
 }
 
