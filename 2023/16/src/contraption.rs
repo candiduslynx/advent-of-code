@@ -1,15 +1,7 @@
 use std::fs::read;
 use std::io::BufRead;
 
-use lib::point::Point;
-
-#[derive(Clone, Copy)]
-pub(crate) enum Dir {
-    L = 1,
-    R = 2,
-    U = 4,
-    D = 8,
-}
+use lib::point::{Dir, Point};
 
 #[derive(Clone, Copy)]
 pub(crate) struct Node {
@@ -27,16 +19,13 @@ impl Node {
         }
     }
 
-    pub(crate) fn next(
-        &mut self,
-        (point, from): &PointDir,
-    ) -> Option<(Option<PointDir>, Option<PointDir>)> {
+    pub(crate) fn next(&mut self, (point, from): &PointDir) -> [Option<PointDir>; 2] {
         let fr = *from as u8;
         return match self.entered & fr {
             0 => {
                 self.entered |= fr;
                 match self.c {
-                    b'/' => Some((
+                    b'/' => [
                         Some(Node::passthrough(
                             point,
                             match from {
@@ -47,8 +36,8 @@ impl Node {
                             },
                         )),
                         None,
-                    )),
-                    b'\\' => Some((
+                    ],
+                    b'\\' => [
                         Some(Node::passthrough(
                             point,
                             match from {
@@ -59,25 +48,25 @@ impl Node {
                             },
                         )),
                         None,
-                    )),
+                    ],
                     b'-' => match from {
-                        Dir::U | Dir::D => Some((
+                        Dir::U | Dir::D => [
                             Some(Node::passthrough(point, Dir::L)),
                             Some(Node::passthrough(point, Dir::R)),
-                        )),
-                        _ => Some((Some(Node::passthrough(point, *from)), None)),
+                        ],
+                        _ => [Some(Node::passthrough(point, *from)), None],
                     },
                     b'|' => match from {
-                        Dir::L | Dir::R => Some((
+                        Dir::L | Dir::R => [
                             Some(Node::passthrough(point, Dir::U)),
                             Some(Node::passthrough(point, Dir::D)),
-                        )),
-                        _ => Some((Some(Node::passthrough(point, *from)), None)),
+                        ],
+                        _ => [Some(Node::passthrough(point, *from)), None],
                     },
-                    _ => Some((Some(Node::passthrough(point, *from)), None)),
+                    _ => [Some(Node::passthrough(point, *from)), None],
                 }
             }
-            _ => None,
+            _ => [None, None],
         };
     }
 
@@ -123,8 +112,7 @@ pub(crate) fn energy_from(init: &Contraption, from: PointDir) -> u64 {
     while next.len() > 0 {
         next = next
             .iter()
-            .filter_map(|n| c[n.0.ux()][n.0.uy()].next(n))
-            .flat_map(|x| [x.0, x.1])
+            .flat_map(|n| c[n.0.ux()][n.0.uy()].next(n))
             .filter_map(|x| x)
             .filter(|(p, _)| p.is_valid(rows, cols))
             .collect();
