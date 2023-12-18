@@ -79,7 +79,7 @@ impl Point {
         }
     }
 
-    pub fn neighbour(&self, dir: &Dir) -> Self {
+    pub fn neighbour(&self, dir: Dir) -> Self {
         match dir {
             Dir::L => self.left(),
             Dir::R => self.right(),
