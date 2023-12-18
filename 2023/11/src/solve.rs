@@ -20,18 +20,18 @@ pub(crate) fn solve(path: &str, scale: u64) -> u64 {
                 .enumerate()
                 .filter(|(_, c)| b'#'.eq(c))
                 .map(move |(y, _)| Point {
-                    x: x as isize,
-                    y: y as isize,
+                    x: x as i64,
+                    y: y as i64,
                 })
         })
         .collect::<Vec<Point>>();
 
-    let empty_x: Vec<isize> = galaxies
+    let empty_x: Vec<i64> = galaxies
         .iter()
         .map(|p| p.x)
         .fold(
-            HashSet::from_iter(0isize..sky.len() as isize),
-            |mut left: HashSet<isize>, x| {
+            HashSet::from_iter(0i64..sky.len() as i64),
+            |mut left: HashSet<i64>, x| {
                 left.remove(&x);
                 left
             },
@@ -39,12 +39,12 @@ pub(crate) fn solve(path: &str, scale: u64) -> u64 {
         .into_iter()
         .collect();
 
-    let empty_y: Vec<isize> = galaxies
+    let empty_y: Vec<i64> = galaxies
         .iter()
         .map(|p| p.y)
         .fold(
-            HashSet::from_iter(0isize..sky[0].len() as isize),
-            |mut left: HashSet<isize>, y| {
+            HashSet::from_iter(0i64..sky[0].len() as i64),
+            |mut left: HashSet<i64>, y| {
                 left.remove(&y);
                 left
             },
@@ -69,7 +69,7 @@ pub(crate) fn solve(path: &str, scale: u64) -> u64 {
         .sum()
 }
 
-fn intersections(start: isize, end: isize, points_of_interest: &Vec<isize>) -> usize {
+fn intersections(start: i64, end: i64, points_of_interest: &Vec<i64>) -> usize {
     let (mut s, mut e) = (start, end);
     if start > end {
         (s, e) = (end, start);
