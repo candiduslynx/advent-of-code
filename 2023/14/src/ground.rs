@@ -95,5 +95,5 @@ pub(crate) fn to_u128(v: &Vec<Vec<u8>>) -> u128 {
                 s
             })
         })
-        .fold(0u128, |s, c| s.rotate_left(1) ^ c)
+        .fold(0u128, |s, c| s ^ c)
 }
