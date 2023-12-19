@@ -1,6 +1,6 @@
-use std::fs::read;
-use std::io::BufRead;
+use crate::workflow;
 
 pub(crate) fn solve(path: &str) -> u64 {
-    read(path).unwrap().lines().count() as u64
+    let (w, _) = workflow::scan(path).unwrap();
+    workflow::possibilities(&w)
 }

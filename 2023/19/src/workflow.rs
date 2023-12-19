@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs::read;
 use std::iter::once;
+use std::ops::Range;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -263,6 +264,147 @@ pub(crate) fn sort(parts: &Vec<Part>, workflows: &HashMap<String, Workflow>) -> 
                 (None, Some(next)) => next_open.push((p, next)),
                 _o => panic!("odd state {_o:?}"),
             }
+        }
+        open = next_open;
+    }
+    result
+}
+
+#[derive(Debug, Clone)]
+struct PartRange {
+    x: Range<u64>,
+    m: Range<u64>,
+    a: Range<u64>,
+    s: Range<u64>,
+}
+
+impl PartRange {
+    fn workflow(&self, w: &Workflow) -> (Vec<(PartRange, String)>, u64) {
+        let mut state = self.clone();
+        let mut result = 0u64;
+        let mut next = Vec::new();
+        for d in w.decisions.iter() {
+            let (matched, skipped) = state.decision(d);
+            match d.term {
+                Some(false) => {}
+                Some(true) => match matched {
+                    Some(m) => result += m.possibilities(),
+                    _ => {}
+                },
+                None => match matched {
+                    Some(m) => next.push((m, d.next.clone().unwrap())),
+                    _ => {}
+                },
+            }
+            match skipped {
+                None => break,
+                Some(skipped) => state = skipped,
+            }
+        }
+        (next, result)
+    }
+
+    /// split range in 2 parts: the one that will be affected by the decision & the one that will skip that
+    fn decision(&self, d: &Decision) -> (Option<PartRange>, Option<PartRange>) {
+        match d.scale {
+            None => (Some(self.clone()), None),
+            Some(scale) => {
+                let val = d.val.unwrap();
+                let r = match scale {
+                    Scale::X => &self.x,
+                    Scale::M => &self.m,
+                    Scale::A => &self.a,
+                    Scale::S => &self.s,
+                };
+                let (mut l, val, mut r) = PartRange::split(r, val);
+                let (matched, skipped) = match d.gt.unwrap() {
+                    true => {
+                        // ? > val -> the matching are (val..r.end), skipped = [l.start, val]
+                        l.end = val + 1; // we work on exclusive range
+                        (r, l)
+                    }
+                    false => {
+                        // ? < val -> the matching are (l.start, val), skipped = [val..r.end)
+                        r.start = val;
+                        (l, r)
+                    }
+                };
+                let matched = if matched.is_empty() {
+                    None
+                } else {
+                    Some(self.with_range_at_scale(matched, scale))
+                };
+                let skipped = if skipped.is_empty() {
+                    None
+                } else {
+                    Some(self.with_range_at_scale(skipped, scale))
+                };
+                (matched, skipped)
+            }
+        }
+    }
+
+    fn with_range_at_scale(&self, r: Range<u64>, scale: Scale) -> Self {
+        match scale {
+            Scale::X => Self {
+                x: r,
+                ..self.clone()
+            },
+            Scale::M => Self {
+                m: r,
+                ..self.clone()
+            },
+            Scale::A => Self {
+                a: r,
+                ..self.clone()
+            },
+            Scale::S => Self {
+                s: r,
+                ..self.clone()
+            },
+        }
+    }
+
+    /// (start..at,at, at+1..end)
+    fn split(r: &Range<u64>, at: u64) -> (Range<u64>, u64, Range<u64>) {
+        if at < r.start {
+            (at..at, at, r.clone())
+        } else if at >= r.end {
+            (r.clone(), at, at..at)
+        } else {
+            (r.start..at, at, at + 1..r.end)
+        }
+    }
+
+    fn possibilities(self) -> u64 {
+        let x = self.x.count() as u64;
+        let m = self.m.count() as u64;
+        let a = self.a.count() as u64;
+        let s = self.s.count() as u64;
+        x * m * a * s
+    }
+}
+
+pub(crate) fn possibilities(workflows: &HashMap<String, Workflow>) -> u64 {
+    let mut result = 0u64;
+    let mut open = vec![(
+        PartRange {
+            x: 1..4001u64, // [1..4000)
+            m: 1..4001u64, // [1..4000)
+            a: 1..4001u64, // [1..4000)
+            s: 1..4001u64, // [1..4000)
+        },
+        workflows.get("in").unwrap(),
+    )];
+
+    while !open.is_empty() {
+        let mut next_open = Vec::new();
+        for (r, w) in open.into_iter() {
+            let (next, diff) = r.workflow(w);
+            result += diff;
+            next.into_iter()
+                .map(|(r, s)| (r, workflows.get(&s).unwrap()))
+                .for_each(|p| next_open.push(p));
         }
         open = next_open;
     }
