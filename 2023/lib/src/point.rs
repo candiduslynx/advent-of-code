@@ -72,6 +72,27 @@ impl Point {
         ]
     }
 
+    pub fn neighbors_straight(&self) -> [Self; 4] {
+        [
+            Point {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Point {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Point {
+                x: self.x,
+                y: self.y + 1,
+            },
+            Point {
+                x: self.x + 1,
+                y: self.y,
+            },
+        ]
+    }
+
     pub fn above(&self) -> Self {
         Point {
             x: self.x - 1,
