@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use rayon::prelude::*;
+
 use crate::sand;
 use crate::sand::FallenBrick;
 
@@ -11,6 +13,7 @@ pub(crate) fn solve(path: &str) -> u64 {
         .iter()
         .enumerate()
         .filter_map(|(id, ok)| if *ok { None } else { Some(id) })
+        .par_bridge()
         .map(|id| will_fall(&fallen, id))
         .sum()
 }
@@ -19,18 +22,12 @@ fn will_fall(fallen: &Vec<FallenBrick>, remove: usize) -> u64 {
     let mut fallen = fallen.clone();
     let mut result = 0u64;
     let mut open: VecDeque<FallenBrick> = may_fall_next(&mut fallen, remove);
-    let mut processed = vec![false; fallen.len() + 1];
 
     // shorthand to writing len > 0 + pop front
     while let Some(f) = open.pop_front() {
         if f.supported_by.len() > 0 {
             continue;
         }
-        // f is indeed falling now
-        if processed[f.id] {
-            continue;
-        }
-        processed[f.id] = true;
         result += 1;
 
         may_fall_next(&mut fallen, f.id)

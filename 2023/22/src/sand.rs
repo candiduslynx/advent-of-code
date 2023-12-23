@@ -63,26 +63,10 @@ impl Brick {
     }
 
     fn xy(&self) -> Vec<(usize, usize)> {
-        if self.start.x < self.end.x && self.start.y < self.end.y {
-            println!("non-trivial {:?}~{:?}", self.start, self.end)
-        }
         (self.start.x..=self.end.x)
             .into_iter()
             .flat_map(|x| (self.start.y..=self.end.y).into_iter().map(move |y| (x, y)))
             .collect()
-    }
-
-    fn fall_to(&self, min_height: usize) -> Self {
-        let mut res = *self;
-        if min_height > res.start.z {
-            println!(
-                "odd move {} to {min_height}: {:?}~{:?}",
-                self.id, self.start, self.end
-            );
-        }
-        assert!(min_height <= res.start.z);
-        (res.start.z, res.end.z) = (min_height, (res.end.z - res.start.z) + min_height);
-        res
     }
 
     fn height(&self) -> usize {
