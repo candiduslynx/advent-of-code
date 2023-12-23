@@ -129,26 +129,6 @@ pub(crate) fn scan(path: &str) -> Result<HashMap<String, Module>, ParseErr> {
     Ok(result)
 }
 
-pub(crate) fn flops(modules: &HashMap<String, Module>) -> Vec<String> {
-    modules
-        .values()
-        .filter(|m| m.typ == Type::FlipFlop)
-        .map(|m| m.name.clone())
-        .collect()
-}
-
-pub(crate) fn state(modules: &HashMap<String, Module>, o: &Vec<String>) -> u64 {
-    o.iter()
-        .map(|n| modules.get(n).unwrap().state)
-        .fold(0u64, |mut s, x| {
-            s <<= 1;
-            if x {
-                s += 1;
-            }
-            s
-        })
-}
-
 /// `send` will return the amount of (low, high) signals that were caused by this press along with all signals that were sent during this iteration.
 pub(crate) fn send(modules: &mut HashMap<String, Module>, s: Signal) -> (u64, u64, Vec<Signal>) {
     let mut open: VecDeque<Signal> = VecDeque::from([s]);
