@@ -1,6 +1,7 @@
-use std::fs::read;
-use std::io::BufRead;
+use crate::hike;
 
 pub(crate) fn solve(path: &str) -> u64 {
-    read(path).unwrap().lines().count() as u64
+    let (field, start, end) = hike::scan(path);
+
+    hike::longest(&field, &start, &end, false) as u64
 }
