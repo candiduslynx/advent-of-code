@@ -3,5 +3,5 @@ use crate::hike;
 pub(crate) fn solve(path: &str) -> u64 {
     let (field, start, end) = hike::scan(path);
 
-    hike::longest(&field, &start, &end, true) as u64
+    hike::longest(&field, &start, &end) as u64
 }
