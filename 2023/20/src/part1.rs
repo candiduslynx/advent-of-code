@@ -11,7 +11,7 @@ pub(crate) fn solve(path: &str) -> u64 {
 
     const CYCLES: usize = 1000;
     for i in 1..=CYCLES {
-        let (l, h) = module::send(
+        let (l, h, _) = module::send(
             &mut modules,
             ("button".to_string(), false, "broadcaster".to_string()),
         );

@@ -8,7 +8,7 @@ pub(crate) type Signal = (String, bool, String); // from, what, to
 /// Simple send-all logic
 #[derive(Clone, Debug)]
 pub(crate) struct Sender {
-    dst: Vec<String>,
+    pub(crate) dst: Vec<String>,
 }
 
 impl Sender {
@@ -35,10 +35,10 @@ pub(crate) enum Type {
 
 #[derive(Clone, Debug)]
 pub(crate) struct Module {
-    name: String,
+    pub(crate) name: String,
     typ: Type,
     state: bool,
-    src: HashMap<String, bool>,
+    pub(crate) src: HashMap<String, bool>,
     send: Sender,
 }
 
@@ -67,6 +67,10 @@ impl Module {
                 }
             }
         }
+    }
+
+    pub(crate) fn sends_to(&self, to: &str) -> bool {
+        self.send.dst.contains(&to.to_string())
     }
 }
 
@@ -145,9 +149,10 @@ pub(crate) fn state(modules: &HashMap<String, Module>, o: &Vec<String>) -> u64 {
         })
 }
 
-/// `send` will return the amount of (low, high) signals that were caused by this press
-pub(crate) fn send(modules: &mut HashMap<String, Module>, s: Signal) -> (u64, u64) {
+/// `send` will return the amount of (low, high) signals that were caused by this press along with all signals that were sent during this iteration.
+pub(crate) fn send(modules: &mut HashMap<String, Module>, s: Signal) -> (u64, u64, Vec<Signal>) {
     let mut open: VecDeque<Signal> = VecDeque::from([s]);
+    let mut done: Vec<Signal> = Vec::new();
 
     let mut low = 0u64;
     let mut high = 0u64;
@@ -166,6 +171,7 @@ pub(crate) fn send(modules: &mut HashMap<String, Module>, s: Signal) -> (u64, u6
                 Some(signals) => signals.into_iter().for_each(|s| open.push_back(s)),
             },
         }
+        done.push(s);
     }
-    (low, high)
+    (low, high, done)
 }
