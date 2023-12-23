@@ -101,8 +101,10 @@ pub(crate) fn scan(path: &str) -> Vec<Brick> {
         .collect()
 }
 
+#[derive(Clone)]
 pub(crate) struct FallenBrick {
-    supported_by: Vec<usize>,
+    pub(crate) id: usize,
+    pub(crate) supported_by: Vec<usize>,
 }
 
 impl FallenBrick {
@@ -140,9 +142,22 @@ pub(crate) fn fall(bricks: &Vec<Brick>) -> Vec<FallenBrick> {
         supported_by.sort();
         supported_by.dedup();
 
-        result.push(FallenBrick { supported_by });
+        result.push(FallenBrick {
+            id: b.id,
+            supported_by,
+        });
         b.xy().iter().for_each(|&(x, y)| space[x][y] = b.id);
         top_level[b.id] = max + b.height();
     }
     result
+}
+
+pub(crate) fn only_support(fallen: &Vec<FallenBrick>) -> Vec<bool> {
+    let mut can_remove = vec![true; fallen.len() + 1];
+    can_remove[0] = false; // ground is out of scope
+    fallen
+        .iter()
+        .filter_map(|fb| fb.only_support())
+        .for_each(|id| can_remove[id] = false);
+    can_remove
 }
