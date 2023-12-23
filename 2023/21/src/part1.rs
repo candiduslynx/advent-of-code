@@ -2,11 +2,11 @@ use crate::field;
 
 pub(crate) fn solve(path: &str) -> u64 {
     let (f, start) = field::scan(path);
-    const STEPS: usize = 64; // todo: update after test passes
-    let w = field::walk(&f, &start, STEPS);
-    // the even/odd stays the same, so we just need to calc properly
-    (STEPS % 2..=STEPS)
+    let d = field::distances(&f, &start);
+
+    const STEPS: usize = 64;
+    (STEPS & 1..=STEPS.min(d.len() - 1))
         .step_by(2)
-        .map(|idx| w[idx].len() as u64)
+        .map(|i| d[i])
         .sum()
 }
