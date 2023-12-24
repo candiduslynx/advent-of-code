@@ -92,29 +92,48 @@ pub(crate) fn dfs(
     at: Point,
     best: usize,
 ) -> usize {
+    let mut at = at;
+    let mut pushed = 0usize;
     let (max_x, max_y) = (field.len() as u64, field[0].len() as u64);
-    if &at == to {
-        if best < path.len() {
-            println!("found a path with {} len", path.len());
+    let res = loop {
+        let mut res = best;
+        if &at == to {
+            if best < path.len() {
+                println!("found a path with {} len", path.len());
+            }
+            break path.len();
         }
-        return path.len();
-    }
-    let mut res = best;
-    for p in at.neighbors_straight() {
-        if !p.is_valid(max_x, max_y) {
-            continue;
+        let next: Vec<Point> = at
+            .neighbors_straight()
+            .into_iter()
+            .filter(|p| p.is_valid(max_x, max_y))
+            .filter(|p| !path.contains(p))
+            .filter(|p| field[p.ux()][p.uy()] != b'#')
+            .collect();
+
+        match next.len() {
+            0 => break res, // no path available next
+            1 => {
+                pushed += 1; // push next
+                path.push_back(next[0]);
+                at = next[0];
+                continue;
+            }
+            _ => {
+                next.into_iter().for_each(|p| {
+                    path.push_back(p);
+                    let new = dfs(field, path, to, p, res);
+                    path.pop_back();
+                    res = res.max(new);
+                });
+                break res;
+            }
         }
-        let (x, y) = p.coords();
-        if field[x][y] == b'#' {
-            //wall
-            continue;
-        }
-        if path.contains(&p) {
-            continue;
-        }
-        path.push_back(p);
-        res = res.max(dfs(field, path, to, p, res));
+    };
+
+    // cleanup
+    (0..pushed).for_each(|_| {
         path.pop_back();
-    }
+    });
     res
 }
