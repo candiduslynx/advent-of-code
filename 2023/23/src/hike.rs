@@ -98,9 +98,7 @@ pub(crate) fn dfs(
     let res = loop {
         let mut res = best;
         if &at == to {
-            if best < path.len() {
-                println!("found a path with {} len", path.len());
-            }
+            println!("found a path with {} len, best is {best}", path.len());
             break path.len();
         }
         let next: Vec<Point> = at
