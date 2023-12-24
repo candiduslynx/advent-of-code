@@ -95,9 +95,6 @@ pub(crate) fn dfs(
 ) -> Option<usize> {
     let (max_x, max_y) = (field.len() as u64, field[0].len() as u64);
     if &at == to {
-        if best < curr {
-            println!("saw {curr}, prev best was {best}")
-        }
         return Some(curr);
     }
     let mut best = best;
