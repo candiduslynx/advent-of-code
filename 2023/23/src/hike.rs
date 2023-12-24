@@ -87,51 +87,38 @@ pub(crate) fn longest(field: &Vec<Vec<u8>>, start: &Point, to: &Point) -> usize 
 
 pub(crate) fn dfs(
     field: &Vec<Vec<u8>>,
-    path: &mut VecDeque<Point>,
+    saw: &mut Vec<Vec<bool>>,
+    curr: usize,
     to: &Point,
     at: Point,
     best: usize,
-) -> usize {
-    let mut at = at;
-    let mut pushed = 0usize;
+) -> Option<usize> {
     let (max_x, max_y) = (field.len() as u64, field[0].len() as u64);
-    let res = loop {
-        let mut res = best;
-        if &at == to {
-            println!("found a path with {} len, best is {best}", path.len());
-            break path.len();
+    if &at == to {
+        if best < curr {
+            println!("saw {curr}, prev best was {best}")
         }
-        let next: Vec<Point> = at
-            .neighbors_straight()
-            .into_iter()
-            .filter(|p| p.is_valid(max_x, max_y))
-            .filter(|p| !path.contains(p))
-            .filter(|p| field[p.ux()][p.uy()] != b'#')
-            .collect();
-
-        match next.len() {
-            0 => break res, // no path available next
-            1 => {
-                pushed += 1; // push next
-                path.push_back(next[0]);
-                at = next[0];
-                continue;
-            }
-            _ => {
-                next.into_iter().for_each(|p| {
-                    path.push_back(p);
-                    let new = dfs(field, path, to, p, res);
-                    path.pop_back();
-                    res = res.max(new);
-                });
-                break res;
+        return Some(curr);
+    }
+    let mut best = best;
+    for (x, y) in at
+        .neighbors_straight()
+        .into_iter()
+        .filter(|p| p.is_valid(max_x, max_y))
+        .map(|p| p.coords())
+        .filter(|&(x, y)| field[x][y] != b'#')
+    {
+        match saw[x][y] {
+            true => continue,
+            false => {
+                saw[x][y] = true;
+                let new = dfs(field, saw, curr + 1, to, Point::from_coords(x, y), best);
+                saw[x][y] = false;
+                if new.is_some() {
+                    best = best.max(new.unwrap());
+                }
             }
         }
-    };
-
-    // cleanup
-    (0..pushed).for_each(|_| {
-        path.pop_back();
-    });
-    res
+    }
+    Some(best)
 }
