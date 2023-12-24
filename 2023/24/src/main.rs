@@ -1,5 +1,6 @@
 use lib::time_solution::*;
 
+mod hail;
 mod part1;
 mod part2;
 

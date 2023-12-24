@@ -1,6 +1,6 @@
-use std::fs::read;
-use std::io::BufRead;
+use crate::hail;
 
 pub(crate) fn solve(path: &str) -> u64 {
-    read(path).unwrap().lines().count() as u64
+    let stones = hail::scan(path);
+    stones.len() as u64
 }
