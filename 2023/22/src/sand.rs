@@ -43,6 +43,7 @@ pub(crate) struct Brick {
 
 #[derive(Debug)]
 pub(crate) struct ParseError;
+
 impl FromStr for Brick {
     type Err = ParseError;
 
