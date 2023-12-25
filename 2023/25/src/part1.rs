@@ -7,6 +7,6 @@ pub(crate) fn solve(path: &str) -> usize {
         graph.get_mut(&bridge.0).unwrap().remove(&bridge.1);
         graph.get_mut(&bridge.1).unwrap().remove(&bridge.0);
     }
-    let gl = wires::bfs_reach(&graph, &graph.keys().next().unwrap());
+    let gl = wires::component_size(&graph, &graph.keys().next().unwrap());
     gl * (graph.len() - gl)
 }

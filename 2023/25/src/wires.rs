@@ -18,11 +18,14 @@ fn parse(input: String) -> Graph {
 
 pub(crate) fn scan(path: &str) -> Graph {
     let s = String::from_utf8(read(path).unwrap().to_vec()).unwrap();
-    (move |s: String| parse(s))(s)
+    parse(s)
 }
 
+/// find the edge with the most paths crossing ("bridge" but not quite)
+/// if we have 2 components to be split, the paths from one to the other all have to go through one of the bridges
 pub(crate) fn find_bridge(graph: &Graph) -> (String, String) {
     let mut paths: HashMap<(String, String), usize> = HashMap::new();
+    // just walk the paths
     for start in graph.keys().cloned() {
         let mut to_see = VecDeque::new();
         to_see.push_back(start.clone());
@@ -46,7 +49,8 @@ pub(crate) fn find_bridge(graph: &Graph) -> (String, String) {
     paths.into_iter().max_by_key(|&(_, v)| v).unwrap().0
 }
 
-pub(crate) fn bfs_reach(graph: &Graph, node: &String) -> usize {
+/// calculates the size of the component containing the node
+pub(crate) fn component_size(graph: &Graph, node: &String) -> usize {
     let mut seen: HashSet<&str> = HashSet::new();
     let mut open: VecDeque<&str> = VecDeque::from([node.as_str()]);
 
