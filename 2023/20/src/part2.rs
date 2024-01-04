@@ -10,15 +10,15 @@ pub(crate) fn solve(path: &str) -> u64 {
         .values()
         .find(|m| m.sends_to("rx"))
         .unwrap()
-        .name
-        .clone();
+        .name()
+        .to_string();
 
     let mut pre_tg: HashMap<String, u64> = modules
         .get(&pre_rx)
         .unwrap()
-        .src
-        .iter()
-        .map(|(n, _)| (n.clone(), 0u64))
+        .src()
+        .into_iter()
+        .map(|s| (s, 0u64))
         .collect();
 
     let mut idx = 0u64;
