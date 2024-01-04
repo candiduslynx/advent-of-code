@@ -8,69 +8,80 @@ pub(crate) type Signal = (String, bool, String); // from, what, to
 /// Simple send-all logic
 #[derive(Clone, Debug)]
 pub(crate) struct Sender {
-    pub(crate) dst: Vec<String>,
+    name: String,
+    dst: Vec<String>,
 }
 
 impl Sender {
-    fn new(dst: &Vec<String>) -> Self {
-        Self {
-            dst: dst.iter().map(|s| s.to_string()).collect(),
-        }
+    fn new(name: String, dst: Vec<String>) -> Self {
+        Self { name, dst }
     }
 
-    fn send(&self, from: &str, s: bool) -> Vec<Signal> {
+    fn send(&self, s: bool) -> Vec<Signal> {
         self.dst
             .iter()
-            .map(|to| (from.to_string(), s, to.clone()))
+            .map(|to| (self.name.clone(), s, to.clone()))
             .collect()
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub(crate) enum Type {
-    Broadcast,
-    FlipFlop,
-    Conjunction,
-}
-
 #[derive(Clone, Debug)]
-pub(crate) struct Module {
-    pub(crate) name: String,
-    typ: Type,
-    state: bool,
-    pub(crate) src: HashMap<String, bool>,
-    send: Sender,
+pub(crate) enum Module {
+    Broadcast { sender: Sender },
+    FlipFlop { sender: Sender, state: bool },
+    Conjunction { sender: Sender, src: HashMap<String, bool> },
 }
 
 impl Module {
-    fn receive(&mut self, from: &str, s: bool) -> Option<Vec<Signal>> {
-        match self.typ {
-            Type::Broadcast => Some(self.send.send(&self.name, s)),
-            Type::FlipFlop => match s {
+    fn receive(&mut self, from: &str, signal: bool) -> Option<Vec<Signal>> {
+        match self {
+            Module::Broadcast { sender } => Some(sender.send(signal)),
+            Module::FlipFlop { sender, state } => match signal {
                 true => None,
                 false => {
-                    self.state = !self.state;
-                    Some(self.send.send(&self.name, self.state))
+                    *state = !*state;
+                    Some(sender.send(*state))
                 }
             },
-            Type::Conjunction => {
-                self.src.entry(from.to_string()).and_modify(|e| *e = s);
-                match s {
-                    false => Some(self.send.send(&self.name, true)), // don't even iterate as at least 1 input is false
-                    true => {
-                        if self.src.values().all(|b| *b) {
-                            Some(self.send.send(&self.name, false))
-                        } else {
-                            Some(self.send.send(&self.name, true))
-                        }
-                    }
+            Module::Conjunction { sender, src } => {
+                src.entry(from.to_string()).and_modify(|e| *e = signal);
+                match signal {
+                    false => Some(sender.send(true)), // don't even iterate as at least 1 input is false
+                    true => Some(sender.send(src.values().any(|b| !*b))),
                 }
             }
         }
     }
 
     pub(crate) fn sends_to(&self, to: &str) -> bool {
-        self.send.dst.contains(&to.to_string())
+        let sender = match self {
+            Module::Broadcast { sender } => sender,
+            Module::FlipFlop { sender, .. } => sender,
+            Module::Conjunction { sender, .. } => sender,
+        };
+        sender.dst.contains(&to.to_string())
+    }
+
+    fn add_src(&mut self, from: &str) {
+        if let Module::Conjunction { src, .. } = self {
+            src.insert(from.to_string(), false);
+        }
+    }
+
+    pub(crate) fn name(&self) -> &str {
+        let sender = match self {
+            Module::Broadcast { sender } => sender,
+            Module::FlipFlop { sender, .. } => sender,
+            Module::Conjunction { sender, .. } => sender,
+        };
+        &sender.name
+    }
+
+    pub(crate) fn src(&self) -> Vec<String> {
+        if let Module::Conjunction { src, .. } = self {
+            return src.keys().map(|s| s.clone()).collect();
+        }
+        Vec::new()
     }
 }
 
@@ -88,20 +99,12 @@ impl FromStr for Module {
             .filter(|s| !s.is_empty())
             .collect();
 
-        let (typ, name) = match name.as_bytes()[0] {
-            b'b' => (Type::Broadcast, name),
-            b'%' => (Type::FlipFlop, &name[1..]),
-            b'&' => (Type::Conjunction, &name[1..]),
-            _ => return Err(ParseErr),
-        };
-
-        Ok(Self {
-            name: name.to_string(),
-            typ,
-            state: false,
-            src: HashMap::new(),
-            send: Sender::new(&dst),
-        })
+        match name.as_bytes()[0] {
+            b'b' => Ok(Module::Broadcast { sender: Sender::new(name.to_string(), dst) }),
+            b'%' => Ok(Module::FlipFlop { sender: Sender::new((&name[1..]).to_string(), dst), state: false }),
+            b'&' => Ok(Module::Conjunction { sender: Sender::new((&name[1..]).to_string(), dst), src: HashMap::new() }),
+            _ => Err(ParseErr),
+        }
     }
 }
 
@@ -116,14 +119,13 @@ pub(crate) fn scan(path: &str) -> Result<HashMap<String, Module>, ParseErr> {
 
     let mut result = HashMap::new();
     for m in modules.iter() {
+        let name = m.name();
         let mut m = m.clone();
         modules
             .iter()
-            .filter(|&d| d.send.dst.contains(&m.name))
-            .for_each(|src| {
-                m.src.insert(src.name.clone(), false);
-            });
-        result.insert(m.name.clone(), m);
+            .filter(|&d| d.sends_to(name))
+            .for_each(|src| m.add_src(src.name()));
+        result.insert(name.to_string(), m);
     }
 
     Ok(result)
